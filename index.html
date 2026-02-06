@@ -567,9 +567,9 @@
                     
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-xs md:text-sm text-yellow-900">
                         <strong>📊 Difficulty Multipliers:</strong><br>
-                        • Standard (Flat): 1.0x - Rate $0.0018/sqft, 0.00002 B.Hrs/sqft<br>
-                        • Sloped/Hilly: 1.25x - Rate $0.0023/sqft, 0.000025 B.Hrs/sqft<br>
-                        • Extreme/Obstacles: 1.5x - Rate $0.0027/sqft, 0.00003 B.Hrs/sqft
+                        • Standard (Flat): 1.0x - Rate $0.0018/sqft, 0.0012 mins/sqft<br>
+                        • Sloped/Hilly: 1.25x - Rate $0.0023/sqft, 0.0015 mins/sqft<br>
+                        • Extreme/Obstacles: 1.5x - Rate $0.0027/sqft, 0.0018 mins/sqft
                     </div>
                     
                     <button id="calculateBtn" class="w-full py-3 md:py-4 bg-gradient-to-r from-green-600 to-green-800 text-white rounded-xl font-bold text-base md:text-lg hover:shadow-lg transition">
@@ -606,8 +606,8 @@
                             <div class="text-lg font-bold text-gray-800" id="resultFrequency">-</div>
                         </div>
                         <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
-                            <div class="text-gray-600 text-xs mb-1">Budgeted Hours (B. Hrs)</div>
-                            <div class="text-2xl font-bold text-blue-600" id="resultBHrs">0.00</div>
+                            <div class="text-gray-600 text-xs mb-1">Budgeted Time (Minutes)</div>
+                            <div class="text-2xl font-bold text-blue-600" id="resultBHrs">0</div>
                         </div>
                         <div class="bg-green-50 p-4 rounded-xl border-2 border-green-200">
                             <div class="text-gray-600 text-xs mb-1">Estimated Price</div>
@@ -678,8 +678,8 @@
                 <div class="pdf-section-title">Pricing Breakdown</div>
                 <div class="pdf-info-grid">
                     <div class="pdf-info-item">
-                        <div class="pdf-info-label">Budgeted Hours (B. Hrs)</div>
-                        <div class="pdf-info-value" id="pdfBHrs">0.00 hrs</div>
+                        <div class="pdf-info-label">Budgeted Time (Minutes)</div>
+                        <div class="pdf-info-value" id="pdfBHrs">0 mins</div>
                     </div>
                     <div class="pdf-info-item" style="background: #dcfce7;">
                         <div class="pdf-info-label">Estimated Price Per Visit</div>
@@ -753,8 +753,9 @@
             }
             
             const budgetedHours = totalArea * difficultyConfig.bhrs;
+            const budgetedMinutes = budgetedHours * 60; // Convert hours to minutes
             
-            return { price: finalPrice, bHrs: budgetedHours };
+            return { price: finalPrice, bHrs: budgetedHours, bMins: budgetedMinutes };
         }
 
         function initMap() {
@@ -1067,7 +1068,7 @@
             document.getElementById('resultService').textContent = serviceNames[serviceType];
             document.getElementById('resultDifficulty').textContent = difficultyNames[difficulty];
             document.getElementById('resultFrequency').textContent = frequencyNames[frequency];
-            document.getElementById('resultBHrs').textContent = result.bHrs.toFixed(2) + ' hrs';
+            document.getElementById('resultBHrs').textContent = Math.round(result.bMins) + ' mins';
             document.getElementById('resultPrice').textContent = '$' + result.price.toFixed(2);
             
             captureMapSnapshot();
