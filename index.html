@@ -758,8 +758,13 @@
         }
 
         function initMap() {
-            setupAutocomplete();
+            console.log('Google Maps API loaded, initializing...');
             setupFloatingControls();
+            
+            // Setup autocomplete after a short delay to ensure API is fully ready
+            setTimeout(() => {
+                setupAutocomplete();
+            }, 100);
             
             const fullscreenBtn = document.getElementById('customFullscreenBtn');
             if(fullscreenBtn) {
@@ -904,33 +909,49 @@
         }
         
         function setupAutocomplete() {
-            const input = document.getElementById('addressInput');
-            const brevardBounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(BREVARD_BOUNDS.south, BREVARD_BOUNDS.west),
-                new google.maps.LatLng(BREVARD_BOUNDS.north, BREVARD_BOUNDS.east)
-            );
-            
-            autocomplete = new google.maps.places.Autocomplete(input, {
-                bounds: brevardBounds,
-                strictBounds: false,
-                componentRestrictions: {country: 'us'},
-                fields: ['geometry', 'formatted_address', 'address_components'],
-                types: ['address']
-            });
-            
-            autocomplete.addListener('place_changed', () => {
-                const place = autocomplete.getPlace();
-                
-                if(!place.geometry || !place.geometry.location) {
-                    alert('Please select an address from the dropdown');
+            try {
+                const input = document.getElementById('addressInput');
+                if (!input) {
+                    console.error('Address input element not found');
                     return;
                 }
                 
-                propertyAddress = place.formatted_address;
-                const lat = place.geometry.location.lat();
-                const lng = place.geometry.location.lng();
-                loadMap(lat, lng);
-            });
+                if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                    console.error('Google Places API not loaded');
+                    return;
+                }
+                
+                const brevardBounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(BREVARD_BOUNDS.south, BREVARD_BOUNDS.west),
+                    new google.maps.LatLng(BREVARD_BOUNDS.north, BREVARD_BOUNDS.east)
+                );
+                
+                autocomplete = new google.maps.places.Autocomplete(input, {
+                    bounds: brevardBounds,
+                    strictBounds: false,
+                    componentRestrictions: {country: 'us'},
+                    fields: ['geometry', 'formatted_address', 'address_components'],
+                    types: ['address']
+                });
+                
+                console.log('Autocomplete initialized successfully');
+                
+                autocomplete.addListener('place_changed', () => {
+                    const place = autocomplete.getPlace();
+                    
+                    if(!place.geometry || !place.geometry.location) {
+                        alert('Please select an address from the dropdown');
+                        return;
+                    }
+                    
+                    propertyAddress = place.formatted_address;
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    loadMap(lat, lng);
+                });
+            } catch(error) {
+                console.error('Error setting up autocomplete:', error);
+            }
         }
         
         function loadMap(lat, lng) {
@@ -1354,6 +1375,16 @@
             `);
             
             printWindow.document.close();
+        });
+        
+        // Fallback: Try to initialize autocomplete after page load if not already done
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (!autocomplete && typeof google !== 'undefined' && google.maps && google.maps.places) {
+                    console.log('Fallback: Initializing autocomplete after page load');
+                    setupAutocomplete();
+                }
+            }, 1000);
         });
     </script>
     
