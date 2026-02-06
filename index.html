@@ -752,12 +752,13 @@
             }
             
             const budgetedHours = totalArea * difficultyConfig.bhrs;
-            const budgetedMinutes = budgetedHours * 60; // Convert hours to minutes
+            const budgetedMinutes = budgetedHours * 60;
             
             return { price: finalPrice, bHrs: budgetedHours, bMins: budgetedMinutes };
         }
 
-        function initMap() {
+        // Define initMap in global scope for Google Maps callback
+        window.initMap = function() {
             console.log('Google Maps API loaded, initializing...');
             setupFloatingControls();
             
@@ -841,7 +842,7 @@
                     }
                 });
             }
-        }
+        };
         
         function setupFloatingControls() {
             document.getElementById('zoomInBtn').addEventListener('click', function() {
@@ -1363,13 +1364,13 @@
                             <p>All services include: Mowing, Weed Trimming, Edging, and Blowing</p>
                         </div>
                     </div>
-                    <script>
+                    <script type="text/javascript">
                         window.onload = function() {
                             setTimeout(function() {
                                 window.print();
                             }, 250);
                         };
-                    </script>
+                    <\/script>
                 </body>
                 </html>
             `);
