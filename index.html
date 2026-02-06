@@ -6,7 +6,6 @@
     <meta http-equiv="Permissions-Policy" content="fullscreen=(self)">
     <title>Staff Property Measuring Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             background: transparent;
@@ -1080,13 +1079,16 @@
             if(!map) return;
             
             try {
+                // Load html2canvas if not already loaded
                 if(typeof html2canvas === 'undefined') {
                     const script = document.createElement('script');
                     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                    script.onload = () => { doCapture(); };
+                    script.onload = () => { 
+                        setTimeout(() => doCapture(), 500); 
+                    };
                     document.head.appendChild(script);
                 } else {
-                    doCapture();
+                    setTimeout(() => doCapture(), 500);
                 }
             } catch(error) {
                 console.error('Error loading html2canvas:', error);
@@ -1095,17 +1097,24 @@
         
         function doCapture() {
             const mapElement = document.getElementById('map');
-            html2canvas(mapElement, {
-                useCORS: true,
-                allowTaint: true,
-                logging: false,
-                backgroundColor: null,
-                scale: 1
-            }).then(canvas => {
-                mapSnapshot = canvas.toDataURL('image/jpeg', 0.8);
-            }).catch(error => {
-                console.error('html2canvas error:', error);
-            });
+            
+            // Wait a bit for tiles to load
+            setTimeout(() => {
+                html2canvas(mapElement, {
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    backgroundColor: '#e5e7eb',
+                    scale: 2,
+                    foreignObjectRendering: false
+                }).then(canvas => {
+                    mapSnapshot = canvas.toDataURL('image/png', 1.0);
+                    console.log('Map snapshot captured successfully');
+                }).catch(error => {
+                    console.error('html2canvas error:', error);
+                    mapSnapshot = null;
+                });
+            }, 1000);
         }
         
         document.getElementById('closeModal').addEventListener('click', () => {
@@ -1126,41 +1135,225 @@
                 day: 'numeric' 
             });
             
-            document.getElementById('pdfDate').textContent = dateStr;
-            document.getElementById('pdfCustomerName').textContent = customerName;
-            document.getElementById('pdfAddress').textContent = propertyAddress;
-            document.getElementById('pdfArea').textContent = document.getElementById('resultArea').textContent;
-            document.getElementById('pdfService').textContent = document.getElementById('resultService').textContent;
-            document.getElementById('pdfDifficulty').textContent = document.getElementById('resultDifficulty').textContent;
-            document.getElementById('pdfFrequency').textContent = document.getElementById('resultFrequency').textContent;
-            document.getElementById('pdfBHrs').textContent = document.getElementById('resultBHrs').textContent;
-            document.getElementById('pdfPrice').textContent = document.getElementById('resultPrice').textContent;
+            // Populate PDF content
+            const pdfDate = dateStr;
+            const pdfCustomer = customerName;
+            const pdfAddr = propertyAddress;
+            const pdfArea = document.getElementById('resultArea').textContent;
+            const pdfService = document.getElementById('resultService').textContent;
+            const pdfDiff = document.getElementById('resultDifficulty').textContent;
+            const pdfFreq = document.getElementById('resultFrequency').textContent;
+            const pdfTime = document.getElementById('resultBHrs').textContent;
+            const pdfPriceVal = document.getElementById('resultPrice').textContent;
             
+            // Map image section
+            let mapImageHtml = '';
             if(mapSnapshot) {
-                document.getElementById('pdfMapImage').src = mapSnapshot;
+                mapImageHtml = `
+                    <div class="pdf-section">
+                        <div class="pdf-section-title">Property Map</div>
+                        <img src="${mapSnapshot}" alt="Property Map" style="width: 100%; max-height: 400px; object-fit: contain; border: 2px solid #21A348; border-radius: 12px; margin-top: 15px;">
+                    </div>
+                `;
+            } else {
+                mapImageHtml = `
+                    <div class="pdf-section">
+                        <div class="pdf-section-title">Property Map</div>
+                        <div style="padding: 40px; text-align: center; background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 12px; margin-top: 15px;">
+                            <p style="color: #6b7280; font-size: 14px;">Map image not available</p>
+                        </div>
+                    </div>
+                `;
             }
             
-            const element = document.getElementById('pdfContent');
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank', 'width=900,height=800');
             
-            // Temporarily show the element for PDF generation
-            element.style.display = 'block';
-            element.style.position = 'absolute';
-            element.style.left = '-9999px';
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Property Estimate - ${pdfCustomer}</title>
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        body {
+                            font-family: Arial, sans-serif;
+                            padding: 20px;
+                            background: white;
+                        }
+                        .pdf-page {
+                            background: white;
+                            padding: 40px;
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }
+                        .pdf-header {
+                            text-align: center;
+                            margin-bottom: 30px;
+                            border-bottom: 3px solid #21A348;
+                            padding-bottom: 20px;
+                        }
+                        .pdf-logo {
+                            max-width: 200px;
+                            margin: 0 auto 15px;
+                            display: block;
+                        }
+                        .pdf-title {
+                            font-size: 28px;
+                            font-weight: 700;
+                            color: #21A348;
+                            margin-bottom: 10px;
+                        }
+                        .pdf-subtitle {
+                            font-size: 14px;
+                            color: #6b7280;
+                        }
+                        .pdf-section {
+                            margin-bottom: 25px;
+                            page-break-inside: avoid;
+                        }
+                        .pdf-section-title {
+                            font-size: 18px;
+                            font-weight: 700;
+                            color: #374151;
+                            margin-bottom: 12px;
+                            border-left: 4px solid #21A348;
+                            padding-left: 12px;
+                        }
+                        .pdf-info-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 15px;
+                        }
+                        .pdf-info-item {
+                            background: #f9fafb;
+                            padding: 12px;
+                            border-radius: 8px;
+                            border: 1px solid #e5e7eb;
+                        }
+                        .pdf-info-label {
+                            font-size: 12px;
+                            color: #6b7280;
+                            margin-bottom: 4px;
+                        }
+                        .pdf-info-value {
+                            font-size: 16px;
+                            font-weight: 600;
+                            color: #374151;
+                        }
+                        .highlight {
+                            background: #dcfce7 !important;
+                        }
+                        .highlight .pdf-info-value {
+                            color: #16a34a;
+                            font-size: 20px;
+                        }
+                        .pdf-footer {
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 2px solid #e5e7eb;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #6b7280;
+                        }
+                        .pdf-footer p {
+                            margin: 5px 0;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                            }
+                            .pdf-page {
+                                padding: 20px;
+                            }
+                        }
+                        @page {
+                            margin: 0.5in;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="pdf-page">
+                        <div class="pdf-header">
+                            <img src="https://04bab2c6a63da3ec5306-1c92bab3ac761f2036299816f4cab718.ssl.cf1.rackcdn.com//eaf97ab3-bb79-4ee9-8077-7feb7fb9e12c.png" alt="WS Lawn Care Services" class="pdf-logo" onerror="this.style.display='none'">
+                            <div class="pdf-title">Property Estimate Report</div>
+                            <div class="pdf-subtitle">Generated: ${pdfDate}</div>
+                        </div>
+
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">Customer Information</div>
+                            <div class="pdf-info-grid">
+                                <div class="pdf-info-item">
+                                    <div class="pdf-info-label">Customer Name</div>
+                                    <div class="pdf-info-value">${pdfCustomer}</div>
+                                </div>
+                                <div class="pdf-info-item">
+                                    <div class="pdf-info-label">Property Address</div>
+                                    <div class="pdf-info-value">${pdfAddr}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">Measurement Details</div>
+                            <div class="pdf-info-grid">
+                                <div class="pdf-info-item">
+                                    <div class="pdf-info-label">Total Lawn Area</div>
+                                    <div class="pdf-info-value">${pdfArea}</div>
+                                </div>
+                                <div class="pdf-info-item">
+                                    <div class="pdf-info-label">Service Type</div>
+                                    <div class="pdf-info-value">${pdfService}</div>
+                                </div>
+                                <div class="pdf-info-item">
+                                    <div class="pdf-info-label">Difficulty Level</div>
+                                    <div class="pdf-info-value">${pdfDiff}</div>
+                                </div>
+                                <div class="pdf-info-item">
+                                    <div class="pdf-info-label">Service Frequency</div>
+                                    <div class="pdf-info-value">${pdfFreq}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">Pricing Breakdown</div>
+                            <div class="pdf-info-grid">
+                                <div class="pdf-info-item">
+                                    <div class="pdf-info-label">Budgeted Time (Minutes)</div>
+                                    <div class="pdf-info-value">${pdfTime}</div>
+                                </div>
+                                <div class="pdf-info-item highlight">
+                                    <div class="pdf-info-label">Estimated Price Per Visit</div>
+                                    <div class="pdf-info-value">${pdfPriceVal}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${mapImageHtml}
+
+                        <div class="pdf-footer">
+                            <p><strong>WS Lawn Care Services, LLC</strong></p>
+                            <p>This is an estimate. Final pricing subject to site inspection and customer approval.</p>
+                            <p>All services include: Mowing, Weed Trimming, Edging, and Blowing</p>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                            }, 250);
+                        };
+                    </script>
+                </body>
+                </html>
+            `);
             
-            const opt = {
-                margin: 0.5,
-                filename: `Property_Estimate_${customerName.replace(/\s+/g, '_')}_${today.toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Hide the element again after PDF is generated
-                element.style.display = 'none';
-                element.style.position = '';
-                element.style.left = '';
-            });
+            printWindow.document.close();
         });
     </script>
     
