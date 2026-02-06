@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="fullscreen=(self)">
+    <title>Staff Property Measuring Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            background: transparent;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .fullpage-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            z-index: 999999;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .fullpage-popup.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .popup-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        @media (min-width: 768px) {
+            .popup-content {
+                padding: 40px 20px 40px 20px;
+            }
+        }
+        
+        .pac-container {
+            z-index: 10000000;
+        }
+        
+        #map .gm-control-active {
+            display: block !important;
+        }
+        
+        #map .gm-fullscreen-control {
+            display: block !important;
+            z-index: 1000 !important;
+        }
+        
+        .map-expanded .gm-bundled-control {
+            margin: 10px !important;
+        }
+        
+        .map-expanded .gm-svpc {
+            margin: 10px !important;
+        }
+        
+        @media (max-width: 768px) {
+            .map-expanded .gm-bundled-control {
+                margin: 10px 10px 10px 10px !important;
+                right: 10px !important;
+            }
+            
+            .map-expanded .gm-style-mtc {
+                margin: 60px 10px 10px 10px !important;
+                right: 0 !important;
+                max-width: calc(100vw - 80px) !important;
+            }
+            
+            .map-expanded .gm-svpc {
+                margin: 10px !important;
+                left: 10px !important;
+            }
+            
+            .map-expanded div[style*="TOP_CENTER"],
+            .map-expanded div[style*="LEFT_TOP"] {
+                left: 10px !important;
+                top: 60px !important;
+                right: auto !important;
+            }
+            
+            #customFullscreenBtn {
+                top: 10px !important;
+                right: 10px !important;
+            }
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 20px;
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        @media (min-width: 768px) {
+            .modal-content {
+                padding: 40px;
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .modal-close:hover {
+            background: #dc2626;
+            transform: rotate(90deg);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #21A348;
+            box-shadow: 0 0 0 3px rgba(33, 163, 72, 0.1);
+        }
+        
+        @media (max-width: 640px) {
+            .exit-text {
+                display: none;
+            }
+            
+            #customFullscreenBtn {
+                max-width: calc(100vw - 20px);
+                box-sizing: border-box;
+            }
+        }
+        
+        #customFullscreenBtn {
+            position: relative;
+            z-index: 10;
+        }
+        
+        .floating-controls {
+            display: none;
+            position: fixed;
+            z-index: 1000001;
+        }
+        
+        .floating-controls.active {
+            display: block;
+        }
+        
+        .zoom-controls {
+            position: fixed;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000001;
+        }
+        
+        .zoom-btn {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border: 2px solid #21A348;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #21A348;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .zoom-btn:active {
+            transform: scale(0.95);
+            background: #21A348;
+            color: white;
+        }
+        
+        .map-type-toggle {
+            position: fixed;
+            right: 15px;
+            top: 70px;
+            background: white;
+            border: 2px solid #21A348;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #21A348;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 1000001;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .map-type-toggle:active {
+            transform: scale(0.95);
+            background: #21A348;
+            color: white;
+        }
+        
+        .drawing-toggle {
+            position: fixed;
+            left: 15px;
+            top: 70px;
+            background: white;
+            border: 2px solid #8B5CF6;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #8B5CF6;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 1000001;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .drawing-toggle.active-draw {
+            background: #8B5CF6;
+            color: white;
+        }
+        
+        .drawing-toggle:active {
+            transform: scale(0.95);
+        }
+        
+        @media (max-width: 768px) {
+            .map-expanded .gm-bundled-control,
+            .map-expanded .gm-style-mtc,
+            .map-expanded .gmnoprint {
+                display: none !important;
+            }
+        }
+
+        .streetview-toggle {
+            position: fixed;
+            left: 15px;
+            top: 130px;
+            background: white;
+            border: 2px solid #3B82F6;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3B82F6;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 1000001;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .streetview-toggle:active {
+            transform: scale(0.95);
+            background: #3B82F6;
+            color: white;
+        }
+
+        #pdfContent {
+            display: none;
+        }
+
+        .pdf-page {
+            background: white;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #21A348;
+            padding-bottom: 20px;
+        }
+
+        .pdf-logo {
+            max-width: 200px;
+            margin: 0 auto 15px;
+        }
+
+        .pdf-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #21A348;
+            margin-bottom: 10px;
+        }
+
+        .pdf-section {
+            margin-bottom: 25px;
+        }
+
+        .pdf-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 12px;
+            border-left: 4px solid #21A348;
+            padding-left: 12px;
+        }
+
+        .pdf-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .pdf-info-item {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .pdf-info-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .pdf-info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .pdf-map {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border: 2px solid #21A348;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .pdf-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div id="fullPagePopup" class="fullpage-popup active">
+        <div class="popup-content">
+            <h1 class="text-3xl md:text-5xl font-bold text-center mb-6 md:mb-8" style="color: #21A348;">
+                Staff Property Measuring Tool
+            </h1>
+            
+            <!-- Step 1: Customer Name & Address -->
+            <div id="step1" class="mb-6 md:mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 border-2 border-blue-200">
+                    <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Step 1: Customer Information</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 text-sm">Customer First Name</label>
+                            <input 
+                                type="text" 
+                                id="customerFirstName" 
+                                class="form-input"
+                                placeholder="Enter first name..."
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 text-sm">Customer Last Name</label>
+                            <input 
+                                type="text" 
+                                id="customerLastName" 
+                                class="form-input"
+                                placeholder="Enter last name..."
+                            />
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <label class="block text-gray-700 font-semibold mb-2 text-sm">Property Address</label>
+                        <input 
+                            type="text" 
+                            id="addressInput" 
+                            class="w-full px-4 py-3 md:py-4 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base md:text-lg"
+                            placeholder="Enter property address..."
+                            autocomplete="off"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Map with Drawing & Street View -->
+            <div id="step2" class="hidden mb-6 md:mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 border-2 border-purple-200">
+                    <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Step 2: Measure Lawn Area</h2>
+                    <div class="bg-purple-50 border border-purple-300 rounded-lg p-3 md:p-4 mb-4">
+                        <div class="font-bold text-purple-900 mb-2 text-sm md:text-base">📐 Instructions:</div>
+                        <ol class="list-decimal list-inside space-y-1 text-xs md:text-sm text-purple-800">
+                            <li>Use Street View button to check property access</li>
+                            <li>Click fullscreen for easier drawing</li>
+                            <li>Click around edges of grass areas to draw</li>
+                            <li>Double-click last point to complete</li>
+                            <li>Draw multiple areas if needed</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="mb-3 flex justify-end">
+                        <button id="customFullscreenBtn" class="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-green-700 transition font-semibold shadow-lg flex items-center gap-2 text-sm md:text-base">
+                            <span style="font-size:16px md:font-size:20px;">⛶</span> <span class="hidden sm:inline">Open</span> Fullscreen Map
+                        </button>
+                    </div>
+                    
+                    <div id="map" style="width:100%;height:400px;position:relative;" class="rounded-xl border-2 border-gray-300 shadow-lg bg-gray-200 md:h-[500px]"></div>
+                    
+                    <div id="floatingControls" class="floating-controls">
+                        <div class="zoom-controls">
+                            <div class="zoom-btn" id="zoomInBtn">+</div>
+                            <div class="zoom-btn" id="zoomOutBtn">−</div>
+                        </div>
+                        
+                        <div class="map-type-toggle" id="mapTypeBtn">
+                            📍 Map
+                        </div>
+                        
+                        <div class="drawing-toggle" id="drawingBtn">
+                            ✏️ Draw
+                        </div>
+
+                        <div class="streetview-toggle" id="streetViewBtn">
+                            👁️ Street View
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="text-gray-700">
+                                <span class="font-semibold text-base md:text-lg">Total Area:</span>
+                                <span id="totalArea" class="text-green-600 font-bold text-xl md:text-2xl ml-2">0 sq ft</span>
+                            </div>
+                            <button id="clearBtn" class="w-full sm:w-auto px-4 md:px-6 py-2 md:py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold text-sm md:text-base">
+                                🗑️ Clear
+                            </button>
+                        </div>
+                        <div id="areasList" class="bg-white rounded-lg p-4 border-2 border-gray-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Service Selection with Difficulty -->
+            <div id="step3" class="hidden mb-6 md:mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 border-2 border-green-200">
+                    <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Step 3: Service Configuration</h2>
+                    
+                    <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs md:text-sm text-blue-900">
+                        <strong>ℹ️ All services include:</strong> Mowing, Weed Trimming, Edging, and Blowing
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 text-sm">Service Type</label>
+                            <select id="serviceType" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base">
+                                <option value="">Select service...</option>
+                                <option value="standard">Stand-On Mowing</option>
+                                <option value="push">Push Mowing - Bagged</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 text-sm">Difficulty Level</label>
+                            <select id="difficultyLevel" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base">
+                                <option value="standard">Standard (Flat)</option>
+                                <option value="sloped">Sloped/Hilly</option>
+                                <option value="extreme">Extreme/Obstacles</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2 text-sm">Service Frequency</label>
+                            <select id="frequency" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base">
+                                <option value="onetime">One-time Service</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="biweekly">Bi-weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-xs md:text-sm text-yellow-900">
+                        <strong>📊 Difficulty Multipliers:</strong><br>
+                        • Standard (Flat): 1.0x - Rate $0.0018/sqft, 0.00002 B.Hrs/sqft<br>
+                        • Sloped/Hilly: 1.25x - Rate $0.0023/sqft, 0.000025 B.Hrs/sqft<br>
+                        • Extreme/Obstacles: 1.5x - Rate $0.0027/sqft, 0.00003 B.Hrs/sqft
+                    </div>
+                    
+                    <button id="calculateBtn" class="w-full py-3 md:py-4 bg-gradient-to-r from-green-600 to-green-800 text-white rounded-xl font-bold text-base md:text-lg hover:shadow-lg transition">
+                        📊 Get Estimate Totals
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Modal -->
+            <div id="resultsModal" class="modal-overlay">
+                <div class="modal-content">
+                    <button id="closeModal" class="modal-close">×</button>
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-6 text-center">Property Estimate Summary</h2>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
+                        <strong>Customer:</strong> <span id="resultCustomerName">-</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-4 mb-4">
+                        <div class="bg-green-50 p-4 rounded-xl border-2 border-green-200">
+                            <div class="text-gray-600 text-xs mb-1">Total Lawn Area</div>
+                            <div class="text-2xl font-bold text-green-600" id="resultArea">0 sq ft</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl border-2 border-green-200">
+                            <div class="text-gray-600 text-xs mb-1">Service Type</div>
+                            <div class="text-lg font-bold text-gray-800" id="resultService">-</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl border-2 border-green-200">
+                            <div class="text-gray-600 text-xs mb-1">Difficulty Level</div>
+                            <div class="text-lg font-bold text-gray-800" id="resultDifficulty">-</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl border-2 border-green-200">
+                            <div class="text-gray-600 text-xs mb-1">Service Frequency</div>
+                            <div class="text-lg font-bold text-gray-800" id="resultFrequency">-</div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
+                            <div class="text-gray-600 text-xs mb-1">Budgeted Hours (B. Hrs)</div>
+                            <div class="text-2xl font-bold text-blue-600" id="resultBHrs">0.00</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl border-2 border-green-200">
+                            <div class="text-gray-600 text-xs mb-1">Estimated Price</div>
+                            <div class="text-2xl font-bold text-green-600" id="resultPrice">$0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-900 mb-4">
+                        <strong>📋 Note:</strong> Final pricing may vary based on actual site conditions. Customer approval required for price changes.
+                    </div>
+                    
+                    <div class="text-center">
+                        <button id="pdfBtn" class="w-full px-6 md:px-8 py-3 md:py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition text-base md:text-lg">
+                            📄 Print/Save As PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden PDF Content -->
+    <div id="pdfContent">
+        <div class="pdf-page">
+            <div class="pdf-header">
+                <img src="https://04bab2c6a63da3ec5306-1c92bab3ac761f2036299816f4cab718.ssl.cf1.rackcdn.com//eaf97ab3-bb79-4ee9-8077-7feb7fb9e12c.png" alt="WS Lawn Care Services" class="pdf-logo">
+                <div class="pdf-title">Property Estimate Report</div>
+                <div style="font-size: 14px; color: #6b7280;">Generated: <span id="pdfDate"></span></div>
+            </div>
+
+            <div class="pdf-section">
+                <div class="pdf-section-title">Customer Information</div>
+                <div class="pdf-info-grid">
+                    <div class="pdf-info-item">
+                        <div class="pdf-info-label">Customer Name</div>
+                        <div class="pdf-info-value" id="pdfCustomerName">-</div>
+                    </div>
+                    <div class="pdf-info-item">
+                        <div class="pdf-info-label">Property Address</div>
+                        <div class="pdf-info-value" id="pdfAddress">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pdf-section">
+                <div class="pdf-section-title">Measurement Details</div>
+                <div class="pdf-info-grid">
+                    <div class="pdf-info-item">
+                        <div class="pdf-info-label">Total Lawn Area</div>
+                        <div class="pdf-info-value" id="pdfArea">0 sq ft</div>
+                    </div>
+                    <div class="pdf-info-item">
+                        <div class="pdf-info-label">Service Type</div>
+                        <div class="pdf-info-value" id="pdfService">-</div>
+                    </div>
+                    <div class="pdf-info-item">
+                        <div class="pdf-info-label">Difficulty Level</div>
+                        <div class="pdf-info-value" id="pdfDifficulty">-</div>
+                    </div>
+                    <div class="pdf-info-item">
+                        <div class="pdf-info-label">Service Frequency</div>
+                        <div class="pdf-info-value" id="pdfFrequency">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pdf-section">
+                <div class="pdf-section-title">Pricing Breakdown</div>
+                <div class="pdf-info-grid">
+                    <div class="pdf-info-item">
+                        <div class="pdf-info-label">Budgeted Hours (B. Hrs)</div>
+                        <div class="pdf-info-value" id="pdfBHrs">0.00 hrs</div>
+                    </div>
+                    <div class="pdf-info-item" style="background: #dcfce7;">
+                        <div class="pdf-info-label">Estimated Price Per Visit</div>
+                        <div class="pdf-info-value" style="color: #16a34a; font-size: 20px;" id="pdfPrice">$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pdf-section">
+                <div class="pdf-section-title">Property Map</div>
+                <img id="pdfMapImage" class="pdf-map" src="" alt="Property Map">
+            </div>
+
+            <div class="pdf-footer">
+                <p><strong>WS Lawn Care Services, LLC</strong></p>
+                <p>This is an estimate. Final pricing subject to site inspection and customer approval.</p>
+                <p>All services include: Mowing, Weed Trimming, Edging, and Blowing</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'AIzaSyBHvZq7kiDX_thzi8F9XTg_bySLcxpd_ME';
+        const MINIMUM_CHARGE_STANDON = 45;
+        const MINIMUM_CHARGE_PUSH = 60;
+        const HOURLY_RATE = 91;
+        const FIXED_TRIM_TIME = 20;
+        
+        const STANDON_WIDTH = 3;
+        const STANDON_SPEED = 4;
+        const STANDON_EFFICIENCY = 0.80;
+        const STANDON_SQFT_PER_HOUR = STANDON_WIDTH * STANDON_SPEED * 5280 * STANDON_EFFICIENCY;
+        
+        const PUSH_WIDTH = 1.833;
+        const PUSH_SPEED = 2;
+        const PUSH_EFFICIENCY = 0.80;
+        const PUSH_SQFT_PER_HOUR = PUSH_WIDTH * PUSH_SPEED * 5280 * PUSH_EFFICIENCY;
+        
+        const DIFFICULTY_MULTIPLIERS = {
+            standard: { multiplier: 1.0, rate: 0.0018, bhrs: 0.00002 },
+            sloped: { multiplier: 1.25, rate: 0.0023, bhrs: 0.000025 },
+            extreme: { multiplier: 1.5, rate: 0.0027, bhrs: 0.00003 }
+        };
+        
+        const BREVARD_BOUNDS = {north:28.65,south:27.85,east:-80.40,west:-81.15};
+        
+        let map, drawingManager, autocomplete, streetView, marker;
+        let polygons = [];
+        let totalArea = 0;
+        let propertyAddress = '';
+        let customerName = '';
+        let mapSnapshot = null;
+
+        function calculatePrice(totalArea, serviceType, difficulty) {
+            const sqftPerHour = serviceType === 'standard' ? STANDON_SQFT_PER_HOUR : PUSH_SQFT_PER_HOUR;
+            const minimumCharge = serviceType === 'standard' ? MINIMUM_CHARGE_STANDON : MINIMUM_CHARGE_PUSH;
+            const difficultyConfig = DIFFICULTY_MULTIPLIERS[difficulty];
+            
+            const mowingMinutes = (totalArea / sqftPerHour) * 60;
+            const totalMinutes = mowingMinutes + FIXED_TRIM_TIME;
+            let calculatedPrice = (totalMinutes / 60) * HOURLY_RATE;
+            
+            calculatedPrice *= difficultyConfig.multiplier;
+            
+            let finalPrice = Math.max(minimumCharge, calculatedPrice);
+            
+            if (finalPrice < 100) {
+                finalPrice = Math.round(finalPrice / 5) * 5;
+            } else {
+                finalPrice = Math.round(finalPrice / 10) * 10;
+            }
+            
+            const budgetedHours = totalArea * difficultyConfig.bhrs;
+            
+            return { price: finalPrice, bHrs: budgetedHours };
+        }
+
+        function initMap() {
+            setupAutocomplete();
+            setupFloatingControls();
+            
+            const fullscreenBtn = document.getElementById('customFullscreenBtn');
+            if(fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', function() {
+                    const mapElement = document.getElementById('map');
+                    const isExpanded = mapElement.classList.contains('map-expanded');
+                    const floatingControls = document.getElementById('floatingControls');
+                    const isMobile = window.innerWidth <= 768;
+                    
+                    if(!isExpanded) {
+                        mapElement.classList.add('map-expanded');
+                        mapElement.style.position = 'fixed';
+                        mapElement.style.top = '0';
+                        mapElement.style.left = '0';
+                        mapElement.style.width = '100vw';
+                        mapElement.style.height = '100vh';
+                        mapElement.style.zIndex = '999999';
+                        mapElement.style.borderRadius = '0';
+                        
+                        if(isMobile && floatingControls) {
+                            floatingControls.classList.add('active');
+                        }
+                        
+                        document.body.style.overflow = 'hidden';
+                        document.body.style.position = 'fixed';
+                        document.body.style.width = '100%';
+                        document.body.style.height = '100%';
+                        
+                        fullscreenBtn.innerHTML = '<span style="font-size:18px;">✕</span> <span class="exit-text">Exit</span>';
+                        fullscreenBtn.style.position = 'fixed';
+                        fullscreenBtn.style.top = '10px';
+                        fullscreenBtn.style.right = '10px';
+                        fullscreenBtn.style.zIndex = '1000000';
+                        
+                        if(map) {
+                            setTimeout(function() {
+                                const currentCenter = map.getCenter();
+                                google.maps.event.trigger(map, 'resize');
+                                map.setCenter(currentCenter);
+                            }, 100);
+                        }
+                    } else {
+                        mapElement.classList.remove('map-expanded');
+                        mapElement.style.position = 'relative';
+                        mapElement.style.top = '';
+                        mapElement.style.left = '';
+                        mapElement.style.width = '100%';
+                        mapElement.style.height = '400px';
+                        mapElement.style.zIndex = '';
+                        mapElement.style.borderRadius = '';
+                        
+                        if(floatingControls) {
+                            floatingControls.classList.remove('active');
+                        }
+                        
+                        document.body.style.overflow = '';
+                        document.body.style.position = '';
+                        document.body.style.width = '';
+                        document.body.style.height = '';
+                        
+                        fullscreenBtn.innerHTML = '<span style="font-size:20px;">⛶</span> <span class="hidden sm:inline">Open</span> Fullscreen Map';
+                        fullscreenBtn.style.position = '';
+                        fullscreenBtn.style.top = '';
+                        fullscreenBtn.style.right = '';
+                        fullscreenBtn.style.zIndex = '';
+                        
+                        if(map) {
+                            setTimeout(function() {
+                                const currentCenter = map.getCenter();
+                                google.maps.event.trigger(map, 'resize');
+                                map.setCenter(currentCenter);
+                            }, 100);
+                        }
+                    }
+                });
+            }
+        }
+        
+        function setupFloatingControls() {
+            document.getElementById('zoomInBtn').addEventListener('click', function() {
+                if(map) map.setZoom(map.getZoom() + 1);
+            });
+            
+            document.getElementById('zoomOutBtn').addEventListener('click', function() {
+                if(map) map.setZoom(map.getZoom() - 1);
+            });
+            
+            let isSatellite = true;
+            document.getElementById('mapTypeBtn').addEventListener('click', function() {
+                if(map) {
+                    if(isSatellite) {
+                        map.setMapTypeId('roadmap');
+                        this.textContent = '🛰️ Satellite';
+                        isSatellite = false;
+                    } else {
+                        map.setMapTypeId('satellite');
+                        this.textContent = '📍 Map';
+                        isSatellite = true;
+                    }
+                }
+            });
+            
+            let isDrawing = false;
+            document.getElementById('drawingBtn').addEventListener('click', function() {
+                if(drawingManager) {
+                    if(isDrawing) {
+                        drawingManager.setDrawingMode(null);
+                        this.classList.remove('active-draw');
+                        this.textContent = '✏️ Draw';
+                        isDrawing = false;
+                    } else {
+                        drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+                        this.classList.add('active-draw');
+                        this.textContent = '⏸️ Stop';
+                        isDrawing = true;
+                    }
+                }
+            });
+
+            let streetViewActive = false;
+            document.getElementById('streetViewBtn').addEventListener('click', function() {
+                if(!map) return;
+                
+                if(!streetViewActive) {
+                    const panorama = map.getStreetView();
+                    const center = map.getCenter();
+                    panorama.setPosition(center);
+                    panorama.setVisible(true);
+                    this.textContent = '🗺️ Back to Map';
+                    this.style.background = '#3B82F6';
+                    this.style.color = 'white';
+                    streetViewActive = true;
+                } else {
+                    const panorama = map.getStreetView();
+                    panorama.setVisible(false);
+                    this.textContent = '👁️ Street View';
+                    this.style.background = 'white';
+                    this.style.color = '#3B82F6';
+                    streetViewActive = false;
+                }
+            });
+        }
+        
+        function setupAutocomplete() {
+            const input = document.getElementById('addressInput');
+            const brevardBounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(BREVARD_BOUNDS.south, BREVARD_BOUNDS.west),
+                new google.maps.LatLng(BREVARD_BOUNDS.north, BREVARD_BOUNDS.east)
+            );
+            
+            autocomplete = new google.maps.places.Autocomplete(input, {
+                bounds: brevardBounds,
+                strictBounds: false,
+                componentRestrictions: {country: 'us'},
+                fields: ['geometry', 'formatted_address', 'address_components'],
+                types: ['address']
+            });
+            
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                
+                if(!place.geometry || !place.geometry.location) {
+                    alert('Please select an address from the dropdown');
+                    return;
+                }
+                
+                propertyAddress = place.formatted_address;
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                loadMap(lat, lng);
+            });
+        }
+        
+        function loadMap(lat, lng) {
+            if(!map) {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: {lat, lng},
+                    zoom: 20,
+                    mapTypeId: 'satellite',
+                    mapTypeControl: true,
+                    streetViewControl: true,
+                    fullscreenControl: true,
+                    fullscreenControlOptions: {
+                        position: google.maps.ControlPosition.RIGHT_TOP
+                    },
+                    zoomControl: true
+                });
+
+                marker = new google.maps.Marker({
+                    position: {lat, lng},
+                    map: map,
+                    title: 'Property Location',
+                    draggable: true
+                });
+
+                marker.addListener('dragend', function() {
+                    const pos = marker.getPosition();
+                    map.setCenter(pos);
+                });
+                
+                drawingManager = new google.maps.drawing.DrawingManager({
+                    drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                    drawingControl: true,
+                    drawingControlOptions: {
+                        position: google.maps.ControlPosition.TOP_CENTER,
+                        drawingModes: ['polygon']
+                    },
+                    polygonOptions: {
+                        fillColor: '#22c55e',
+                        fillOpacity: 0.35,
+                        strokeWeight: 3,
+                        strokeColor: '#16a34a',
+                        editable: true,
+                        draggable: false
+                    }
+                });
+                
+                drawingManager.setMap(map);
+                
+                google.maps.event.addListener(drawingManager, 'overlaycomplete', (event) => {
+                    const polygon = event.overlay;
+                    polygons.push(polygon);
+                    drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+                    calculateTotalArea();
+                    google.maps.event.addListener(polygon.getPath(), 'set_at', calculateTotalArea);
+                    google.maps.event.addListener(polygon.getPath(), 'insert_at', calculateTotalArea);
+                });
+                
+                document.getElementById('step2').classList.remove('hidden');
+            } else {
+                map.setCenter({lat, lng});
+                map.setZoom(20);
+                if(marker) {
+                    marker.setPosition({lat, lng});
+                }
+                document.getElementById('step2').classList.remove('hidden');
+            }
+        }
+        
+        function calculateTotalArea() {
+            totalArea = 0;
+            const areasList = document.getElementById('areasList');
+            
+            if(polygons.length === 0) {
+                areasList.innerHTML = '<p class="text-gray-500 text-sm">No areas drawn yet</p>';
+                document.getElementById('totalArea').textContent = '0 sq ft';
+                document.getElementById('step3').classList.add('hidden');
+                return;
+            }
+            
+            let areasHTML = '<div class="space-y-2"><p class="font-semibold text-gray-700 mb-2 text-sm">Individual Areas:</p>';
+            
+            polygons.forEach((polygon, index) => {
+                const areaM2 = google.maps.geometry.spherical.computeArea(polygon.getPath());
+                const areaSqFt = Math.round(areaM2 * 10.764);
+                totalArea += areaSqFt;
+                areasHTML += `<div class="flex justify-between items-center bg-green-50 p-2 rounded text-sm"><span class="text-gray-700">Area ${index+1}:</span><span class="font-semibold text-green-600">${areaSqFt.toLocaleString()} sq ft</span></div>`;
+            });
+            
+            areasHTML += '</div>';
+            areasList.innerHTML = areasHTML;
+            document.getElementById('totalArea').textContent = totalArea.toLocaleString() + ' sq ft';
+            document.getElementById('step3').classList.remove('hidden');
+        }
+        
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            polygons.forEach(polygon => polygon.setMap(null));
+            polygons = [];
+            totalArea = 0;
+            document.getElementById('totalArea').textContent = '0 sq ft';
+            document.getElementById('areasList').innerHTML = '<p class="text-gray-500 text-sm">No areas drawn yet</p>';
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('resultsModal').classList.remove('active');
+            if(drawingManager) {
+                drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+            }
+        });
+        
+        document.getElementById('calculateBtn').addEventListener('click', () => {
+            const serviceType = document.getElementById('serviceType').value;
+            const difficulty = document.getElementById('difficultyLevel').value;
+            const frequency = document.getElementById('frequency').value;
+            const firstName = document.getElementById('customerFirstName').value.trim();
+            const lastName = document.getElementById('customerLastName').value.trim();
+            
+            if(!firstName || !lastName) {
+                alert('Please enter customer name');
+                return;
+            }
+            
+            if(!serviceType || totalArea === 0) {
+                alert('Please select a service type and draw your lawn area');
+                return;
+            }
+            
+            customerName = `${firstName} ${lastName}`;
+            const result = calculatePrice(totalArea, serviceType, difficulty);
+            
+            const serviceNames = {'standard': 'Stand-On Mowing', 'push': 'Push Mowing - Bagged'};
+            const difficultyNames = {'standard': 'Standard (Flat)', 'sloped': 'Sloped/Hilly', 'extreme': 'Extreme/Obstacles'};
+            const frequencyNames = {'onetime': 'One-time Service', 'weekly': 'Weekly', 'biweekly': 'Bi-weekly', 'monthly': 'Monthly'};
+            
+            document.getElementById('resultCustomerName').textContent = customerName;
+            document.getElementById('resultArea').textContent = totalArea.toLocaleString() + ' sq ft';
+            document.getElementById('resultService').textContent = serviceNames[serviceType];
+            document.getElementById('resultDifficulty').textContent = difficultyNames[difficulty];
+            document.getElementById('resultFrequency').textContent = frequencyNames[frequency];
+            document.getElementById('resultBHrs').textContent = result.bHrs.toFixed(2) + ' hrs';
+            document.getElementById('resultPrice').textContent = '$' + result.price.toFixed(2);
+            
+            captureMapSnapshot();
+            
+            document.getElementById('resultsModal').classList.add('active');
+        });
+        
+        function captureMapSnapshot() {
+            if(!map) return;
+            
+            try {
+                if(typeof html2canvas === 'undefined') {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    script.onload = () => { doCapture(); };
+                    document.head.appendChild(script);
+                } else {
+                    doCapture();
+                }
+            } catch(error) {
+                console.error('Error loading html2canvas:', error);
+            }
+        }
+        
+        function doCapture() {
+            const mapElement = document.getElementById('map');
+            html2canvas(mapElement, {
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: null,
+                scale: 1
+            }).then(canvas => {
+                mapSnapshot = canvas.toDataURL('image/jpeg', 0.8);
+            }).catch(error => {
+                console.error('html2canvas error:', error);
+            });
+        }
+        
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('resultsModal').classList.remove('active');
+        });
+        
+        document.getElementById('resultsModal').addEventListener('click', (e) => {
+            if(e.target.id === 'resultsModal') {
+                document.getElementById('resultsModal').classList.remove('active');
+            }
+        });
+        
+        document.getElementById('pdfBtn').addEventListener('click', () => {
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('pdfDate').textContent = dateStr;
+            document.getElementById('pdfCustomerName').textContent = customerName;
+            document.getElementById('pdfAddress').textContent = propertyAddress;
+            document.getElementById('pdfArea').textContent = document.getElementById('resultArea').textContent;
+            document.getElementById('pdfService').textContent = document.getElementById('resultService').textContent;
+            document.getElementById('pdfDifficulty').textContent = document.getElementById('resultDifficulty').textContent;
+            document.getElementById('pdfFrequency').textContent = document.getElementById('resultFrequency').textContent;
+            document.getElementById('pdfBHrs').textContent = document.getElementById('resultBHrs').textContent;
+            document.getElementById('pdfPrice').textContent = document.getElementById('resultPrice').textContent;
+            
+            if(mapSnapshot) {
+                document.getElementById('pdfMapImage').src = mapSnapshot;
+            }
+            
+            const element = document.getElementById('pdfContent');
+            const opt = {
+                margin: 0.5,
+                filename: `Property_Estimate_${customerName.replace(/\s+/g, '_')}_${today.toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        });
+    </script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBHvZq7kiDX_thzi8F9XTg_bySLcxpd_ME&libraries=places,drawing,geometry&callback=initMap" async defer></script>
+</body>
+</html>
