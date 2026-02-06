@@ -1141,6 +1141,12 @@
             }
             
             const element = document.getElementById('pdfContent');
+            
+            // Temporarily show the element for PDF generation
+            element.style.display = 'block';
+            element.style.position = 'absolute';
+            element.style.left = '-9999px';
+            
             const opt = {
                 margin: 0.5,
                 filename: `Property_Estimate_${customerName.replace(/\s+/g, '_')}_${today.toISOString().split('T')[0]}.pdf`,
@@ -1149,7 +1155,12 @@
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
             
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Hide the element again after PDF is generated
+                element.style.display = 'none';
+                element.style.position = '';
+                element.style.left = '';
+            });
         });
     </script>
     
