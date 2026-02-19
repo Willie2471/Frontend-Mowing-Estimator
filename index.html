@@ -566,9 +566,9 @@
                     
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-xs md:text-sm text-yellow-900">
                         <strong>📊 Difficulty Multipliers:</strong><br>
-                        • Standard (Flat): 1.0x - Rate $0.0018/sqft, 0.0012 mins/sqft<br>
-                        • Sloped/Hilly: 1.25x - Rate $0.0023/sqft, 0.0015 mins/sqft<br>
-                        • Extreme/Obstacles: 1.5x - Rate $0.0027/sqft, 0.0018 mins/sqft
+                        • Standard (Flat): 1.0x - Rate $0.0018/sqft, min 26 mins<br>
+                        • Sloped/Hilly: 1.25x - Rate $0.0023/sqft, min 33 mins<br>
+                        • Extreme/Obstacles: 1.5x - Rate $0.0027/sqft, min 39 mins
                     </div>
                     
                     <button id="calculateBtn" class="w-full py-3 md:py-4 bg-gradient-to-r from-green-600 to-green-800 text-white rounded-xl font-bold text-base md:text-lg hover:shadow-lg transition">
@@ -723,6 +723,11 @@
             extreme: { multiplier: 1.5, rate: 0.0027, bhrs: 0.00003 }
         };
         
+        // B.Hrs minimum configuration
+        const B_HRS_MIN = 0.43;        // 26 min base minimum (before difficulty)
+        const B_HRS_TRIGGER = 8250;    // sqft threshold before adding extra time
+        const B_HRS_STEP_RATE = 0.02;  // additional hrs per 1,000 sqft over trigger
+        
         const BREVARD_BOUNDS = {north:28.65,south:27.85,east:-80.40,west:-81.15};
         
         let map, drawingManager, autocomplete, streetView, marker;
@@ -751,8 +756,17 @@
                 finalPrice = Math.round(finalPrice / 10) * 10;
             }
             
-            const budgetedHours = totalArea * difficultyConfig.bhrs;
-            const budgetedMinutes = budgetedHours * 60;
+            // B.Hrs minimum logic:
+            // 1. Start with base 0.43 hrs (26 min) for any property up to 8,250 sqft
+            // 2. Add 0.02 hrs per 1,000 sqft over the 8,250 trigger
+            // 3. Apply service type multiplier (Stand-On: 1.0x, Push: 2.5x)
+            // 4. Apply difficulty multiplier (1.0x / 1.25x / 1.5x)
+            // 5. Convert to minutes and round UP to nearest whole minute
+            const serviceBHrsMultiplier = serviceType === 'push' ? 2.5 : 1.0;
+            const overage = Math.max(0, totalArea - B_HRS_TRIGGER);
+            const baseHrs = B_HRS_MIN + (overage / 1000) * B_HRS_STEP_RATE;
+            const budgetedHours = baseHrs * serviceBHrsMultiplier * difficultyConfig.multiplier;
+            const budgetedMinutes = Math.ceil(budgetedHours * 60);
             
             return { price: finalPrice, bHrs: budgetedHours, bMins: budgetedMinutes };
         }
@@ -1089,7 +1103,7 @@
             document.getElementById('resultService').textContent = serviceNames[serviceType];
             document.getElementById('resultDifficulty').textContent = difficultyNames[difficulty];
             document.getElementById('resultFrequency').textContent = frequencyNames[frequency];
-            document.getElementById('resultBHrs').textContent = Math.round(result.bMins) + ' mins';
+            document.getElementById('resultBHrs').textContent = result.bMins + ' mins';
             document.getElementById('resultPrice').textContent = '$' + result.price.toFixed(2);
             
             captureMapSnapshot();
@@ -1101,7 +1115,6 @@
             if(!map) return;
             
             try {
-                // Load html2canvas if not already loaded
                 if(typeof html2canvas === 'undefined') {
                     const script = document.createElement('script');
                     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
@@ -1120,7 +1133,6 @@
         function doCapture() {
             const mapElement = document.getElementById('map');
             
-            // Wait a bit for tiles to load
             setTimeout(() => {
                 html2canvas(mapElement, {
                     useCORS: true,
@@ -1157,7 +1169,6 @@
                 day: 'numeric' 
             });
             
-            // Populate PDF content
             const pdfDate = dateStr;
             const pdfCustomer = customerName;
             const pdfAddr = propertyAddress;
@@ -1168,7 +1179,6 @@
             const pdfTime = document.getElementById('resultBHrs').textContent;
             const pdfPriceVal = document.getElementById('resultPrice').textContent;
             
-            // Map image section
             let mapImageHtml = '';
             if(mapSnapshot) {
                 mapImageHtml = `
@@ -1188,7 +1198,6 @@
                 `;
             }
             
-            // Create a new window for printing
             const printWindow = window.open('', '_blank', 'width=900,height=800');
             
             printWindow.document.write(`
@@ -1197,105 +1206,25 @@
                 <head>
                     <title>Property Estimate - ${pdfCustomer}</title>
                     <style>
-                        * {
-                            margin: 0;
-                            padding: 0;
-                            box-sizing: border-box;
-                        }
-                        body {
-                            font-family: Arial, sans-serif;
-                            padding: 20px;
-                            background: white;
-                        }
-                        .pdf-page {
-                            background: white;
-                            padding: 40px;
-                            max-width: 800px;
-                            margin: 0 auto;
-                        }
-                        .pdf-header {
-                            text-align: center;
-                            margin-bottom: 30px;
-                            border-bottom: 3px solid #21A348;
-                            padding-bottom: 20px;
-                        }
-                        .pdf-logo {
-                            max-width: 200px;
-                            margin: 0 auto 15px;
-                            display: block;
-                        }
-                        .pdf-title {
-                            font-size: 28px;
-                            font-weight: 700;
-                            color: #21A348;
-                            margin-bottom: 10px;
-                        }
-                        .pdf-subtitle {
-                            font-size: 14px;
-                            color: #6b7280;
-                        }
-                        .pdf-section {
-                            margin-bottom: 25px;
-                            page-break-inside: avoid;
-                        }
-                        .pdf-section-title {
-                            font-size: 18px;
-                            font-weight: 700;
-                            color: #374151;
-                            margin-bottom: 12px;
-                            border-left: 4px solid #21A348;
-                            padding-left: 12px;
-                        }
-                        .pdf-info-grid {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 15px;
-                        }
-                        .pdf-info-item {
-                            background: #f9fafb;
-                            padding: 12px;
-                            border-radius: 8px;
-                            border: 1px solid #e5e7eb;
-                        }
-                        .pdf-info-label {
-                            font-size: 12px;
-                            color: #6b7280;
-                            margin-bottom: 4px;
-                        }
-                        .pdf-info-value {
-                            font-size: 16px;
-                            font-weight: 600;
-                            color: #374151;
-                        }
-                        .highlight {
-                            background: #dcfce7 !important;
-                        }
-                        .highlight .pdf-info-value {
-                            color: #16a34a;
-                            font-size: 20px;
-                        }
-                        .pdf-footer {
-                            margin-top: 30px;
-                            padding-top: 20px;
-                            border-top: 2px solid #e5e7eb;
-                            text-align: center;
-                            font-size: 12px;
-                            color: #6b7280;
-                        }
-                        .pdf-footer p {
-                            margin: 5px 0;
-                        }
-                        @media print {
-                            body {
-                                padding: 0;
-                            }
-                            .pdf-page {
-                                padding: 20px;
-                            }
-                        }
-                        @page {
-                            margin: 0.5in;
-                        }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: Arial, sans-serif; padding: 20px; background: white; }
+                        .pdf-page { background: white; padding: 40px; max-width: 800px; margin: 0 auto; }
+                        .pdf-header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #21A348; padding-bottom: 20px; }
+                        .pdf-logo { max-width: 200px; margin: 0 auto 15px; display: block; }
+                        .pdf-title { font-size: 28px; font-weight: 700; color: #21A348; margin-bottom: 10px; }
+                        .pdf-subtitle { font-size: 14px; color: #6b7280; }
+                        .pdf-section { margin-bottom: 25px; page-break-inside: avoid; }
+                        .pdf-section-title { font-size: 18px; font-weight: 700; color: #374151; margin-bottom: 12px; border-left: 4px solid #21A348; padding-left: 12px; }
+                        .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+                        .pdf-info-item { background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; }
+                        .pdf-info-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+                        .pdf-info-value { font-size: 16px; font-weight: 600; color: #374151; }
+                        .highlight { background: #dcfce7 !important; }
+                        .highlight .pdf-info-value { color: #16a34a; font-size: 20px; }
+                        .pdf-footer { margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280; }
+                        .pdf-footer p { margin: 5px 0; }
+                        @media print { body { padding: 0; } .pdf-page { padding: 20px; } }
+                        @page { margin: 0.5in; }
                     </style>
                 </head>
                 <body>
@@ -1305,59 +1234,30 @@
                             <div class="pdf-title">Property Estimate Report</div>
                             <div class="pdf-subtitle">Generated: ${pdfDate}</div>
                         </div>
-
                         <div class="pdf-section">
                             <div class="pdf-section-title">Customer Information</div>
                             <div class="pdf-info-grid">
-                                <div class="pdf-info-item">
-                                    <div class="pdf-info-label">Customer Name</div>
-                                    <div class="pdf-info-value">${pdfCustomer}</div>
-                                </div>
-                                <div class="pdf-info-item">
-                                    <div class="pdf-info-label">Property Address</div>
-                                    <div class="pdf-info-value">${pdfAddr}</div>
-                                </div>
+                                <div class="pdf-info-item"><div class="pdf-info-label">Customer Name</div><div class="pdf-info-value">${pdfCustomer}</div></div>
+                                <div class="pdf-info-item"><div class="pdf-info-label">Property Address</div><div class="pdf-info-value">${pdfAddr}</div></div>
                             </div>
                         </div>
-
                         <div class="pdf-section">
                             <div class="pdf-section-title">Measurement Details</div>
                             <div class="pdf-info-grid">
-                                <div class="pdf-info-item">
-                                    <div class="pdf-info-label">Total Lawn Area</div>
-                                    <div class="pdf-info-value">${pdfArea}</div>
-                                </div>
-                                <div class="pdf-info-item">
-                                    <div class="pdf-info-label">Service Type</div>
-                                    <div class="pdf-info-value">${pdfService}</div>
-                                </div>
-                                <div class="pdf-info-item">
-                                    <div class="pdf-info-label">Difficulty Level</div>
-                                    <div class="pdf-info-value">${pdfDiff}</div>
-                                </div>
-                                <div class="pdf-info-item">
-                                    <div class="pdf-info-label">Service Frequency</div>
-                                    <div class="pdf-info-value">${pdfFreq}</div>
-                                </div>
+                                <div class="pdf-info-item"><div class="pdf-info-label">Total Lawn Area</div><div class="pdf-info-value">${pdfArea}</div></div>
+                                <div class="pdf-info-item"><div class="pdf-info-label">Service Type</div><div class="pdf-info-value">${pdfService}</div></div>
+                                <div class="pdf-info-item"><div class="pdf-info-label">Difficulty Level</div><div class="pdf-info-value">${pdfDiff}</div></div>
+                                <div class="pdf-info-item"><div class="pdf-info-label">Service Frequency</div><div class="pdf-info-value">${pdfFreq}</div></div>
                             </div>
                         </div>
-
                         <div class="pdf-section">
                             <div class="pdf-section-title">Pricing Breakdown</div>
                             <div class="pdf-info-grid">
-                                <div class="pdf-info-item">
-                                    <div class="pdf-info-label">Budgeted Time (Minutes)</div>
-                                    <div class="pdf-info-value">${pdfTime}</div>
-                                </div>
-                                <div class="pdf-info-item highlight">
-                                    <div class="pdf-info-label">Estimated Price Per Visit</div>
-                                    <div class="pdf-info-value">${pdfPriceVal}</div>
-                                </div>
+                                <div class="pdf-info-item"><div class="pdf-info-label">Budgeted Time (Minutes)</div><div class="pdf-info-value">${pdfTime}</div></div>
+                                <div class="pdf-info-item highlight"><div class="pdf-info-label">Estimated Price Per Visit</div><div class="pdf-info-value">${pdfPriceVal}</div></div>
                             </div>
                         </div>
-
                         ${mapImageHtml}
-
                         <div class="pdf-footer">
                             <p><strong>WS Lawn Care Services, LLC</strong></p>
                             <p>This is an estimate. Final pricing subject to site inspection and customer approval.</p>
@@ -1365,11 +1265,7 @@
                         </div>
                     </div>
                     <script type="text/javascript">
-                        window.onload = function() {
-                            setTimeout(function() {
-                                window.print();
-                            }, 250);
-                        };
+                        window.onload = function() { setTimeout(function() { window.print(); }, 250); };
                     <\/script>
                 </body>
                 </html>
@@ -1378,7 +1274,6 @@
             printWindow.document.close();
         });
         
-        // Fallback: Try to initialize autocomplete after page load if not already done
         window.addEventListener('load', function() {
             setTimeout(() => {
                 if (!autocomplete && typeof google !== 'undefined' && google.maps && google.maps.places) {
