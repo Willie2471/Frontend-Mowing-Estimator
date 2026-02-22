@@ -144,7 +144,12 @@
                         <span style="font-size:16px;">⛶</span> <span class="hidden sm:inline">Open</span> Fullscreen Map
                     </button>
                 </div>
-                <div id="map" style="width:100%;height:400px;position:relative;" class="rounded-xl border-2 border-gray-300 shadow-lg bg-gray-200 md:h-[500px]"></div>
+                <!-- Map wrapper — map lives here normally -->
+                <div id="mapWrapper" style="width:100%;height:400px;position:relative;" class="rounded-xl border-2 border-gray-300 shadow-lg bg-gray-200 md:h-[500px]">
+                    <div id="map" style="width:100%;height:100%;"></div>
+                </div>
+                <!-- Fullscreen overlay — map gets teleported here when fullscreen -->
+                <div id="mapFullscreenOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;background:#000;"></div>
                 <div id="floatingControls" class="floating-controls">
                     <div class="zoom-controls">
                         <div class="zoom-btn" id="zoomInBtn">+</div>
@@ -978,24 +983,50 @@
         if (fsBtn) {
             fsBtn.addEventListener('click', function() {
                 const mapEl = document.getElementById('map');
+                const mapWrapper = document.getElementById('mapWrapper');
+                const overlay = document.getElementById('mapFullscreenOverlay');
                 const fc = document.getElementById('floatingControls');
-                const expanded = mapEl.classList.contains('map-expanded');
-                if (!expanded) {
-                    mapEl.classList.add('map-expanded');
-                    mapEl.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;border-radius:0;';
-                    if (window.innerWidth <= 768 && fc) fc.classList.add('active');
-                    document.body.style.cssText = 'overflow:hidden;position:fixed;width:100%;height:100%;';
+                const isExpanded = overlay.style.display === 'block';
+
+                if (!isExpanded) {
+                    // Save state
+                    if (map) {
+                        fsBtn._savedCenter = map.getCenter();
+                        fsBtn._savedZoom = map.getZoom();
+                    }
+                    // Move map div into fullscreen overlay
+                    overlay.appendChild(mapEl);
+                    mapEl.style.width = '100vw';
+                    mapEl.style.height = '100vh';
+                    overlay.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                    if (fc) fc.classList.add('active');
                     fsBtn.innerHTML = '<span style="font-size:18px;">✕</span> <span class="exit-text">Exit</span>';
-                    fsBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:1000000;';
+                    fsBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:1000000;background:#16a34a;color:white;padding:8px 16px;border-radius:8px;font-weight:600;border:none;cursor:pointer;';
+                    setTimeout(() => {
+                        google.maps.event.trigger(map, 'resize');
+                        if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter);
+                    }, 100);
                 } else {
-                    mapEl.classList.remove('map-expanded');
-                    mapEl.style.cssText = 'position:relative;width:100%;height:400px;';
+                    // Move map div back into wrapper
+                    mapWrapper.appendChild(mapEl);
+                    mapEl.style.width = '100%';
+                    mapEl.style.height = '100%';
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
                     if (fc) fc.classList.remove('active');
-                    document.body.style.cssText = '';
                     fsBtn.innerHTML = '<span style="font-size:20px;">⛶</span> <span class="hidden sm:inline">Open</span> Fullscreen Map';
                     fsBtn.style.cssText = '';
+                    // Fire multiple resizes to guarantee tile reload
+                    const restoreMap = () => {
+                        google.maps.event.trigger(map, 'resize');
+                        if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter);
+                        if (fsBtn._savedZoom) map.setZoom(fsBtn._savedZoom);
+                    };
+                    setTimeout(restoreMap, 50);
+                    setTimeout(restoreMap, 200);
+                    setTimeout(restoreMap, 500);
                 }
-                if (map) setTimeout(() => { const c = map.getCenter(); google.maps.event.trigger(map,'resize'); map.setCenter(c); }, 100);
             });
         }
     };
