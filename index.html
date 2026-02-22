@@ -615,35 +615,32 @@
         if (!map) return;
         currentLinearPoints = [];
         map.setOptions({ draggableCursor: 'crosshair' });
-        let mouseLine = null; // live preview line following cursor
-
-        // Track if last click was part of a dblclick to avoid adding extra point
-        let clickTimer = null;
+        let mouseLine = null;
+        let ignoreNextClick = false; // flag set by dblclick to block the preceding click
 
         linearClickListener = map.addListener('click', (e) => {
-            // Delay to check if this is a dblclick
-            clickTimer = setTimeout(() => {
-                currentLinearPoints.push(e.latLng);
+            if (ignoreNextClick) {
+                ignoreNextClick = false;
+                return; // this click was the first half of a dblclick — skip it
+            }
+            currentLinearPoints.push(e.latLng);
 
-                // Redraw the committed path so far
-                if (previewLine) previewLine.setMap(null);
-                if (currentLinearPoints.length >= 1) {
-                    previewLine = new google.maps.Polyline({
-                        path: currentLinearPoints,
-                        geodesic: true,
-                        strokeColor: '#f59e0b',
-                        strokeOpacity: 1.0,
-                        strokeWeight: 3,
-                        map: map
-                    });
-                }
+            // Redraw the committed path so far
+            if (previewLine) previewLine.setMap(null);
+            previewLine = new google.maps.Polyline({
+                path: [...currentLinearPoints],
+                geodesic: true,
+                strokeColor: '#f59e0b',
+                strokeOpacity: 1.0,
+                strokeWeight: 3,
+                map: map
+            });
 
-                // Show running total near cursor
-                if (currentLinearPoints.length > 1) {
-                    const runningFt = computePolylineFt(currentLinearPoints);
-                    showTempLabel(e.latLng, Math.round(runningFt) + ' ft so far');
-                }
-            }, 200);
+            // Show running total near cursor
+            if (currentLinearPoints.length > 1) {
+                const runningFt = computePolylineFt(currentLinearPoints);
+                showTempLabel(e.latLng, Math.round(runningFt) + ' ft so far');
+            }
         });
 
         // Live cursor preview line
@@ -656,18 +653,23 @@
                 strokeColor: '#fbbf24',
                 strokeOpacity: 0.6,
                 strokeWeight: 2,
-                strokeDasharray: '5,5',
                 map: map
             });
         });
 
-        // Double-click = finish this segment, auto-start next
+        // Double-click = finish segment, auto-ready for next
         const dblClickListener = map.addListener('dblclick', (e) => {
-            clearTimeout(clickTimer); // cancel the pending single-click timer
+            // Tell the click handler that fired just before this to be ignored
+            ignoreNextClick = true;
             if (mouseLine) { mouseLine.setMap(null); mouseLine = null; }
 
-            if (currentLinearPoints.length >= 1) {
-                // Add the dblclick point as the final point
+            // Use whatever points are already committed (dblclick location already
+            // added by the first click of the double-click if timing allowed,
+            // so just finish with what we have)
+            if (currentLinearPoints.length >= 2) {
+                finishLinearSegment();
+            } else if (currentLinearPoints.length === 1) {
+                // Only one point — add dblclick pos as second so we get a line
                 currentLinearPoints.push(e.latLng);
                 finishLinearSegment();
             }
@@ -675,6 +677,9 @@
             // Reset for next segment — stay in linear mode
             currentLinearPoints = [];
             if (previewLine) { previewLine.setMap(null); previewLine = null; }
+
+            // Reset the flag after a tick so normal clicking works again
+            setTimeout(() => { ignoreNextClick = false; }, 50);
         });
 
         map._linearDblClick = dblClickListener;
