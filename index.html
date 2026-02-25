@@ -128,7 +128,7 @@
                         <li>Use Street View to check property access and bed/hedge locations</li>
                         <li>Click fullscreen for easier drawing</li>
                         <li><strong>Polygon mode:</strong> Click around edges of grass areas — double-click to complete</li>
-                        <li><strong>Linear mode:</strong> Click along hedge/bed edges to measure linear feet — double-click to finish</li>
+                        <li><strong>Linear mode:</strong> Click points along hedge/bed edges — double-click the last point to lock in each segment, then immediately draw the next</li>
                         <li>Draw multiple areas as needed (front + back yards, multiple bed sections)</li>
                     </ol>
                 </div>
@@ -601,130 +601,12 @@
         document.getElementById('polygonModeBtn').classList.toggle('active', !isLinearMode);
         document.getElementById('linearModeBtn').classList.toggle('active', isLinearMode);
 
+        if (!drawingManager) return;
         if (isLinearMode) {
-            // Stop polygon drawing
-            if (drawingManager) drawingManager.setDrawingMode(null);
-            startLinearMeasure();
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
         } else {
-            stopLinearMeasure();
-            if (drawingManager) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
         }
-    }
-
-    function startLinearMeasure() {
-        if (!map) return;
-        currentLinearPoints = [];
-        map.setOptions({ draggableCursor: 'crosshair' });
-        let mouseLine = null;
-        let ignoreNextClick = false; // flag set by dblclick to block the preceding click
-
-        linearClickListener = map.addListener('click', (e) => {
-            if (ignoreNextClick) {
-                ignoreNextClick = false;
-                return; // this click was the first half of a dblclick — skip it
-            }
-            currentLinearPoints.push(e.latLng);
-
-            // Redraw the committed path so far
-            if (previewLine) previewLine.setMap(null);
-            previewLine = new google.maps.Polyline({
-                path: [...currentLinearPoints],
-                geodesic: true,
-                strokeColor: '#f59e0b',
-                strokeOpacity: 1.0,
-                strokeWeight: 3,
-                map: map
-            });
-
-            // Show running total near cursor
-            if (currentLinearPoints.length > 1) {
-                const runningFt = computePolylineFt(currentLinearPoints);
-                showTempLabel(e.latLng, Math.round(runningFt) + ' ft so far');
-            }
-        });
-
-        // Live cursor preview line
-        const mouseMoveListener = map.addListener('mousemove', (e) => {
-            if (currentLinearPoints.length === 0) return;
-            if (mouseLine) mouseLine.setMap(null);
-            mouseLine = new google.maps.Polyline({
-                path: [...currentLinearPoints, e.latLng],
-                geodesic: true,
-                strokeColor: '#fbbf24',
-                strokeOpacity: 0.6,
-                strokeWeight: 2,
-                map: map
-            });
-        });
-
-        // Double-click = finish segment, auto-ready for next
-        const dblClickListener = map.addListener('dblclick', (e) => {
-            // Tell the click handler that fired just before this to be ignored
-            ignoreNextClick = true;
-            if (mouseLine) { mouseLine.setMap(null); mouseLine = null; }
-
-            // Use whatever points are already committed (dblclick location already
-            // added by the first click of the double-click if timing allowed,
-            // so just finish with what we have)
-            if (currentLinearPoints.length >= 2) {
-                finishLinearSegment();
-            } else if (currentLinearPoints.length === 1) {
-                // Only one point — add dblclick pos as second so we get a line
-                currentLinearPoints.push(e.latLng);
-                finishLinearSegment();
-            }
-
-            // Reset for next segment — stay in linear mode
-            currentLinearPoints = [];
-            if (previewLine) { previewLine.setMap(null); previewLine = null; }
-
-            // Reset the flag after a tick so normal clicking works again
-            setTimeout(() => { ignoreNextClick = false; }, 50);
-        });
-
-        map._linearDblClick = dblClickListener;
-        map._linearMouseMove = mouseMoveListener;
-        map._linearMouseLine = () => { if (mouseLine) { mouseLine.setMap(null); mouseLine = null; } };
-    }
-
-    function stopLinearMeasure() {
-        if (linearClickListener) { google.maps.event.removeListener(linearClickListener); linearClickListener = null; }
-        if (map && map._linearDblClick) { google.maps.event.removeListener(map._linearDblClick); map._linearDblClick = null; }
-        if (map && map._linearMouseMove) { google.maps.event.removeListener(map._linearMouseMove); map._linearMouseMove = null; }
-        if (map && map._linearMouseLine) { map._linearMouseLine(); map._linearMouseLine = null; }
-        if (previewLine) { previewLine.setMap(null); previewLine = null; }
-        currentLinearPoints = [];
-        if (map) map.setOptions({ draggableCursor: '' });
-    }
-
-    function finishLinearSegment() {
-        if (currentLinearPoints.length < 2) return;
-        const ft = computePolylineFt(currentLinearPoints);
-        const segIndex = linearPolylines.length + 1;
-
-        // Commit the line with a permanent style
-        const line = new google.maps.Polyline({
-            path: [...currentLinearPoints],
-            geodesic: true,
-            strokeColor: '#d97706',
-            strokeOpacity: 1.0,
-            strokeWeight: 3,
-            map: map
-        });
-        linearPolylines.push(line);
-        linearMeasurements.push(ft);
-
-        // Place permanent label at midpoint
-        const mid = getMidpoint(currentLinearPoints);
-        const label = new google.maps.InfoWindow({
-            content: `<div style="font-weight:700;font-size:13px;color:#92400e;white-space:nowrap;">📏 Seg ${segIndex}: ${Math.round(ft)} ft</div>`,
-            disableAutoPan: true
-        });
-        label.open({ map, anchor: new google.maps.Marker({ position: mid, map: null }) });
-        label.setPosition(mid);
-        linearLabels.push(label);
-
-        updateLinearPanel();
     }
 
     function computePolylineFt(points) {
@@ -765,7 +647,7 @@
                 <span class="font-bold text-amber-900">${Math.round(ft)} linear ft</span>
             </div>`;
         });
-        document.getElementById('linearList').innerHTML = html || '<p class="text-amber-700 text-xs">No measurements yet — click points on map, double-click to finish each segment</p>';
+        document.getElementById('linearList').innerHTML = html || '<p class="text-amber-700 text-xs">No segments yet — switch to Linear mode, click your points, then double-click to finish</p>';
 
         const panel = document.getElementById('linearPanel');
         panel.style.display = linearMeasurements.length > 0 ? 'block' : 'none';
@@ -779,7 +661,6 @@
     }
 
     function clearLinearMeasurements() {
-        stopLinearMeasure();
         linearPolylines.forEach(p => p.setMap(null));
         linearPolylines = [];
         linearMeasurements = [];
@@ -788,10 +669,9 @@
         linearLabels = [];
         document.getElementById('linearPanel').style.display = 'none';
         document.getElementById('totalLinearDisplay').textContent = '0 linear ft';
-        // If step3 was only showing because of linear, hide it again
         if (polygons.length === 0) document.getElementById('step3').classList.add('hidden');
-        // If still in linear mode, restart
-        if (isLinearMode && map) startLinearMeasure();
+        // Stay in current drawing mode
+        if (drawingManager && isLinearMode) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
     }
 
     function clearAll() {
@@ -1102,17 +982,40 @@
             marker.addListener('dragend', () => map.setCenter(marker.getPosition()));
             drawingManager = new google.maps.drawing.DrawingManager({
                 drawingMode: google.maps.drawing.OverlayType.POLYGON,
-                drawingControl: true,
-                drawingControlOptions: { position: google.maps.ControlPosition.TOP_CENTER, drawingModes: ['polygon'] },
-                polygonOptions: { fillColor:'#22c55e', fillOpacity:0.35, strokeWeight:3, strokeColor:'#16a34a', editable:true }
+                drawingControl: false,
+                polygonOptions: { fillColor:'#22c55e', fillOpacity:0.35, strokeWeight:3, strokeColor:'#16a34a', editable:true, clickable:false },
+                polylineOptions: { strokeColor:'#d97706', strokeWeight:3, strokeOpacity:1.0, editable:false, clickable:false }
             });
             drawingManager.setMap(map);
             google.maps.event.addListener(drawingManager, 'overlaycomplete', (e) => {
-                polygons.push(e.overlay);
-                drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
-                calculateTotalArea();
-                google.maps.event.addListener(e.overlay.getPath(), 'set_at', calculateTotalArea);
-                google.maps.event.addListener(e.overlay.getPath(), 'insert_at', calculateTotalArea);
+                if (e.type === google.maps.drawing.OverlayType.POLYGON) {
+                    polygons.push(e.overlay);
+                    drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+                    calculateTotalArea();
+                    google.maps.event.addListener(e.overlay.getPath(), 'set_at', calculateTotalArea);
+                    google.maps.event.addListener(e.overlay.getPath(), 'insert_at', calculateTotalArea);
+                } else if (e.type === google.maps.drawing.OverlayType.POLYLINE) {
+                    const path = e.overlay.getPath();
+                    const ft = computePolylineFt(path.getArray());
+                    if (ft > 0) {
+                        linearPolylines.push(e.overlay);
+                        linearMeasurements.push(ft);
+                        const pts = path.getArray();
+                        const mid = pts[Math.floor(pts.length / 2)];
+                        const segIndex = linearMeasurements.length;
+                        const label = new google.maps.InfoWindow({
+                            content: '<div style="font-weight:700;font-size:13px;color:#92400e;white-space:nowrap;">📏 Seg ' + segIndex + ': ' + Math.round(ft) + ' ft</div>',
+                            disableAutoPan: true
+                        });
+                        label.setPosition(mid);
+                        label.open(map);
+                        linearLabels.push(label);
+                        updateLinearPanel();
+                    } else {
+                        e.overlay.setMap(null);
+                    }
+                    drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
+                }
             });
             document.getElementById('step2').classList.remove('hidden');
         } else {
