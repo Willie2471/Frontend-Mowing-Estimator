@@ -204,8 +204,8 @@
                 </div>
 
                 <!-- MOWING PANEL -->
-                <div class="service-panel" id="mowingPanel">
-                    <div class="service-panel-header">
+<div class="service-panel active" id="mowingPanel">              
+    <div class="service-panel-header">
                         <div>
                             <div class="service-panel-title">🌿 Lawn Mowing Service</div>
                             <div class="service-panel-subtitle">Stand-On or Push · Difficulty-based pricing · Min 0.43 B.Hrs</div>
@@ -1080,6 +1080,7 @@
     window.addEventListener('load', () => {
         setTimeout(() => { if (!autocomplete && typeof google !== 'undefined' && google.maps && google.maps.places) setupAutocomplete(); }, 1000);
     });
+    document.addEventListener('DOMContentLoaded', () => { toggleMowingSection(); });
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBHvZq7kiDX_thzi8F9XTg_bySLcxpd_ME&libraries=places,drawing,geometry&callback=initMap" async defer></script>
 </body>
