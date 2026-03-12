@@ -299,6 +299,20 @@
                             — draw a lawn area first
                         </div>
                     </div>
+                    <div style="grid-column: 1 / -1; display:flex; align-items:flex-start; gap:10px; background:rgba(255,255,255,0.07); border-radius:10px; padding:10px 14px; margin-top:2px;">
+                        <input type="checkbox" id="splitHedgeTime" checked style="width:16px;height:16px;accent-color:#a5b4fc;margin-top:2px;flex-shrink:0;" onchange="recalcCrewTime()">
+                        <div>
+                            <div style="color:#e0e7ff;font-weight:700;font-size:13px;">✂️ Split hedge time across crew (both running trimmers)</div>
+                            <div style="color:#a5b4fc;font-size:11px;margin-top:2px;">Checked = hedge on-site time ÷ crew size &nbsp;|&nbsp; Unchecked = hedge stays as solo estimate</div>
+                        </div>
+                        <div style="margin-left:auto;display:flex;align-items:flex-start;gap:10px;flex-shrink:0;">
+                            <input type="checkbox" id="splitBedTime" style="width:16px;height:16px;accent-color:#a5b4fc;margin-top:2px;flex-shrink:0;" onchange="recalcCrewTime()">
+                            <div>
+                                <div style="color:#e0e7ff;font-weight:700;font-size:13px;">🌺 Split bed time across crew</div>
+                                <div style="color:#a5b4fc;font-size:11px;margin-top:2px;">Check only if both crew members work beds simultaneously</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Include Mowing Toggle -->
@@ -519,23 +533,43 @@
                     <strong>Address:</strong> <span id="resultAddress" class="text-gray-600 text-xs">-</span>
                 </div>
 
-                <!-- Time Breakdown Box (new) -->
+                <!-- Time Breakdown Box -->
                 <div class="time-breakdown-box" id="timeBreakdownBox">
-                    <div class="tbb-title">⏱️ Time Summary</div>
-                    <div class="time-breakdown-row">
-                        <span class="tbd-label">Budgeted Time (1 person)</span>
+                    <div class="tbb-title">⏱️ Full Stop Time Summary</div>
+                    <div class="time-breakdown-row" style="border-bottom:1px solid #ddd6fe;padding-bottom:6px;margin-bottom:6px;">
+                        <span class="tbd-label" style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;">Crew Size</span>
+                        <span class="tbd-value" id="resCrewSize" style="font-size:13px;">—</span>
+                    </div>
+                    <div class="time-breakdown-row" id="tbbMowRow" style="display:none;">
+                        <span class="tbd-label">🌿 Mowing — budgeted (solo)</span>
                         <span class="tbd-value" id="resBudgetedTime">—</span>
                     </div>
-                    <div class="time-breakdown-row">
-                        <span class="tbd-label">Crew Size</span>
-                        <span class="tbd-value" id="resCrewSize">—</span>
+                    <div class="time-breakdown-row" id="tbbMowOnsiteRow" style="display:none;">
+                        <span class="tbd-label" style="padding-left:14px;color:#818cf8;">↳ on-site w/ crew</span>
+                        <span class="tbd-value" style="color:#4338ca;" id="resMowOnsiteTime">—</span>
                     </div>
-                    <div class="time-breakdown-row highlight">
-                        <span class="tbd-label" style="font-weight:600;color:#374151;">⏰ On-Site Time</span>
-                        <span class="tbd-value" id="resOnsiteTime">—</span>
+                    <div class="time-breakdown-row" id="tbbBedRow" style="display:none;">
+                        <span class="tbd-label">🌺 Beds — budgeted (solo)</span>
+                        <span class="tbd-value" id="resBedBudgTime">—</span>
+                    </div>
+                    <div class="time-breakdown-row" id="tbbBedOnsiteRow" style="display:none;">
+                        <span class="tbd-label" style="padding-left:14px;color:#818cf8;" id="tbbBedOnsiteLabel">↳ on-site (solo — beds)</span>
+                        <span class="tbd-value" style="color:#4338ca;" id="resBedOnsiteTime">—</span>
+                    </div>
+                    <div class="time-breakdown-row" id="tbbHedgeRow" style="display:none;">
+                        <span class="tbd-label">✂️ Hedges — budgeted (solo)</span>
+                        <span class="tbd-value" id="resHedgeBudgTime">—</span>
+                    </div>
+                    <div class="time-breakdown-row" id="tbbHedgeOnsiteRow" style="display:none;">
+                        <span class="tbd-label" style="padding-left:14px;color:#818cf8;">↳ on-site w/ crew</span>
+                        <span class="tbd-value" style="color:#4338ca;" id="resHedgeOnsiteTime">—</span>
+                    </div>
+                    <div class="time-breakdown-row highlight" style="margin-top:8px;padding-top:8px;border-top:2px solid #818cf8;">
+                        <span class="tbd-label" style="font-weight:700;color:#1e1b4b;font-size:14px;">⏰ Total On-Site Time</span>
+                        <span class="tbd-value" id="resOnsiteTime" style="font-size:17px;color:#3730a3;">—</span>
                     </div>
                     <div id="manualTimeNotice" style="display:none;" class="mt-2 text-xs text-indigo-700 bg-indigo-50 rounded p-2 font-medium">
-                        ⚠️ Time based on manual staff estimate — satellite measurement not available
+                        ⚠️ Mowing time based on manual staff estimate — satellite measurement not available
                     </div>
                 </div>
 
@@ -565,7 +599,7 @@
                     <div class="result-row"><span class="result-label">RM18 Material Fee</span><span class="result-value" id="resBedMaterial">-</span></div>
                     <div class="result-row"><span class="result-label">Debris Disposal</span><span class="result-value" id="resBedDisposal">-</span></div>
                     <div class="result-row"><span class="result-label font-semibold text-gray-700">Bed Maintenance Total</span><span class="result-value green" id="resBedTotal">-</span></div>
-                </div>
+                    <div class="result-row" style="background:#eef2ff;"><span class="result-label" style="font-weight:700;color:#3730a3;">⏰ Est. Bed Time (solo)</span><span class="result-value" style="color:#3730a3;" id="resBedTime">-</span></div>
 
                 <!-- Hedge Results -->
                 <div id="hedgeResults" class="result-section" style="display:none;">
@@ -581,7 +615,7 @@
                     </div>
                     <div class="result-row"><span class="result-label">Disposal Fee</span><span class="result-value" id="resHedgeDisposal">-</span></div>
                     <div class="result-row"><span class="result-label font-semibold text-gray-700">Hedge / Shrub Total</span><span class="result-value green" id="resHedgeTotal">-</span></div>
-                </div>
+                    <div class="result-row" style="background:#eef2ff;"><span class="result-label" style="font-weight:700;color:#3730a3;">⏰ Est. Hedge Time (solo)</span><span class="result-value" style="color:#3730a3;" id="resHedgeTime">-</span></div>
 
                 <!-- Grand Total -->
                 <div class="total-box">
@@ -681,21 +715,56 @@
         const diff = document.getElementById('difficultyLevel').value;
         const crew = getCrewSize();
         const preview = document.getElementById('crewTimePreview');
+        const splitHedge = document.getElementById('splitHedgeTime').checked;
+        const splitBed = document.getElementById('splitBedTime').checked;
+        const inclBedCheck = document.getElementById('includeBed').checked;
+        const inclHedgeCheck = document.getElementById('includeHedge').checked;
 
-        if (isManualTimeMode && manualTimeMins > 0 && svc && diff) {
-            const result = calculateMowingFromTime(manualTimeMins, svc, diff);
-            const onsite = calcOnsiteTime(result.bMins, crew);
-            preview.textContent = `Budgeted: ${formatMins(result.bMins)} → On-site: ${formatMins(onsite)} (${crew}-person crew)`;
+        let mowBudg = 0, mowOnsite = 0;
+        if (isManualTimeMode && manualTimeMins > 0 && diff) {
+            const result = calculateMowingFromTime(manualTimeMins, svc || 'standard', diff);
+            mowBudg = result.bMins;
+            mowOnsite = calcOnsiteTime(mowBudg, crew);
+        } else if (svc && diff && totalArea > 0) {
+            const result = calculateMowing(totalArea, svc, diff);
+            mowBudg = result.bMins;
+            mowOnsite = calcOnsiteTime(mowBudg, crew);
+        }
+
+        // Estimate bed time from current inputs
+        let bedBudg = 0, bedOnsite = 0;
+        if (inclBedCheck) {
+            try {
+                const bed = calculateBed();
+                bedBudg = Math.round((bed.total / HOURLY_RATE) * 60);
+                bedOnsite = splitBed ? calcOnsiteTime(bedBudg, crew) : bedBudg;
+            } catch(e) {}
+        }
+
+        // Estimate hedge time from current inputs
+        let hedgeBudg = 0, hedgeOnsite = 0;
+        if (inclHedgeCheck) {
+            try {
+                const hedge = calculateHedge();
+                hedgeBudg = Math.round((hedge.total / HOURLY_RATE) * 60);
+                hedgeOnsite = splitHedge ? calcOnsiteTime(hedgeBudg, crew) : hedgeBudg;
+            } catch(e) {}
+        }
+
+        if (mowOnsite === 0 && bedOnsite === 0 && hedgeOnsite === 0) {
+            preview.textContent = '— add measurements and services to preview';
             return;
         }
 
-        if (!svc || !diff || totalArea === 0) {
-            preview.textContent = '— draw a lawn area or enter time first';
-            return;
-        }
-        const result = calculateMowing(totalArea, svc, diff);
-        const onsite = calcOnsiteTime(result.bMins, crew);
-        preview.textContent = `Budgeted: ${formatMins(result.bMins)} → On-site: ${formatMins(onsite)} (${crew}-person crew)`;
+        const parallelOnsite = Math.max(mowOnsite, hedgeOnsite);
+        const totalOnsite = parallelOnsite + bedOnsite;
+
+        let parts = [];
+        if (mowBudg > 0) parts.push(`Mow: ${formatMins(mowOnsite)}`);
+        if (hedgeBudg > 0) parts.push(`Hedges: ${formatMins(hedgeOnsite)}`);
+        if (bedBudg > 0) parts.push(`Beds: ${formatMins(bedOnsite)}`);
+        const detail = parts.join(' · ');
+        preview.textContent = `Total stop: ${formatMins(totalOnsite)} (${crew}-person crew)${detail ? ' — ' + detail : ''}`;
     }
 
     // ===== MANUAL TIME MODE =====
@@ -784,6 +853,7 @@
         const isActive = forceState !== undefined ? forceState : !panel.classList.contains('active');
         panel.classList.toggle('active', isActive);
         if (checkbox) checkbox.checked = isActive;
+        recalcCrewTime();
     }
 
     function toggleMowingSection() {
@@ -935,20 +1005,28 @@
             document.getElementById('mowingResults').style.display = 'block';
             grandTotal += mow.price;
 
-            // Time breakdown box
+            // Time breakdown — mowing rows
             document.getElementById('resBudgetedTime').textContent = formatMins(mow.bMins);
-            document.getElementById('resCrewSize').textContent = crewLabel;
-            document.getElementById('resOnsiteTime').textContent = formatMins(onsiteMins);
+            document.getElementById('resMowOnsiteTime').textContent = formatMins(onsiteMins);
+            document.getElementById('tbbMowRow').style.display = 'flex';
+            document.getElementById('tbbMowOnsiteRow').style.display = crew > 1 ? 'flex' : 'none';
             document.getElementById('timeBreakdownBox').style.display = 'block';
             document.getElementById('manualTimeNotice').style.display = isManualTimeMode ? 'block' : 'none';
         } else {
             document.getElementById('mowingResults').style.display = 'none';
-            document.getElementById('timeBreakdownBox').style.display = 'none';
+            document.getElementById('tbbMowRow').style.display = 'none';
+            document.getElementById('tbbMowOnsiteRow').style.display = 'none';
         }
 
         // Bed
+        let bedBudgMins = 0;
         if (inclBed) {
             const bed = calculateBed();
+            // Back-calculate time: total bed cost / hourly rate * 60 mins
+            bedBudgMins = Math.round((bed.total / HOURLY_RATE) * 60);
+            const splitBed = document.getElementById('splitBedTime').checked;
+            const bedOnsiteMins = splitBed ? calcOnsiteTime(bedBudgMins, crew) : bedBudgMins;
+
             document.getElementById('resBedService').textContent = bed.serviceLabel;
             document.getElementById('resBedArea').textContent = bed.measureLabel;
             document.getElementById('resBedBase').textContent = '$' + bed.basePrice.toFixed(2);
@@ -959,13 +1037,31 @@
             document.getElementById('resBedMaterial').textContent = bed.materialFee > 0 ? '+$' + bed.materialFee.toFixed(2) : '$0.00';
             document.getElementById('resBedDisposal').textContent = bed.disposalLabel;
             document.getElementById('resBedTotal').textContent = '$' + bed.total.toFixed(2);
+            document.getElementById('resBedTime').textContent = formatMins(bedBudgMins) + (splitBed && crew > 1 ? ` → ${formatMins(bedOnsiteMins)} w/ crew` : ' (solo)');
             document.getElementById('bedResults').style.display = 'block';
             grandTotal += bed.total;
-        } else { document.getElementById('bedResults').style.display = 'none'; }
+
+            // Time breakdown — bed rows
+            document.getElementById('resBedBudgTime').textContent = formatMins(bedBudgMins);
+            document.getElementById('resBedOnsiteTime').textContent = formatMins(bedOnsiteMins);
+            document.getElementById('tbbBedOnsiteLabel').textContent = splitBed && crew > 1 ? '↳ on-site w/ crew (split)' : '↳ on-site (solo — beds)';
+            document.getElementById('tbbBedRow').style.display = 'flex';
+            document.getElementById('tbbBedOnsiteRow').style.display = 'flex';
+        } else {
+            document.getElementById('bedResults').style.display = 'none';
+            document.getElementById('tbbBedRow').style.display = 'none';
+            document.getElementById('tbbBedOnsiteRow').style.display = 'none';
+        }
 
         // Hedge
+        let hedgeBudgMins = 0;
         if (inclHedge) {
             const hedge = calculateHedge();
+            // Back-calculate time: total hedge cost / hourly rate * 60 mins
+            hedgeBudgMins = Math.round((hedge.total / HOURLY_RATE) * 60);
+            const splitHedge = document.getElementById('splitHedgeTime').checked;
+            const hedgeOnsiteMins = splitHedge ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins;
+
             document.getElementById('resHedgeCategory').textContent = hedge.categoryLabel;
             document.getElementById('resHedgeFt').textContent = hedge.linearFt + ' linear ft';
             document.getElementById('resHedgeRate').textContent = '$' + hedge.rate.toFixed(2) + '/ft';
@@ -977,9 +1073,38 @@
             } else { document.getElementById('resHedgeFirstCutRow').style.display = 'none'; }
             document.getElementById('resHedgeDisposal').textContent = hedge.disposalLabel;
             document.getElementById('resHedgeTotal').textContent = '$' + hedge.total.toFixed(2);
+            document.getElementById('resHedgeTime').textContent = formatMins(hedgeBudgMins) + (splitHedge && crew > 1 ? ` → ${formatMins(hedgeOnsiteMins)} w/ crew` : ' (solo)');
             document.getElementById('hedgeResults').style.display = 'block';
             grandTotal += hedge.total;
-        } else { document.getElementById('hedgeResults').style.display = 'none'; }
+
+            // Time breakdown — hedge rows
+            document.getElementById('resHedgeBudgTime').textContent = formatMins(hedgeBudgMins);
+            document.getElementById('resHedgeOnsiteTime').textContent = formatMins(hedgeOnsiteMins);
+            document.getElementById('tbbHedgeRow').style.display = 'flex';
+            document.getElementById('tbbHedgeOnsiteRow').style.display = crew > 1 ? 'flex' : 'none';
+        } else {
+            document.getElementById('hedgeResults').style.display = 'none';
+            document.getElementById('tbbHedgeRow').style.display = 'none';
+            document.getElementById('tbbHedgeOnsiteRow').style.display = 'none';
+        }
+
+        // Total on-site time = max of parallel tasks (mow || hedges run simultaneously with mowing)
+        // Beds may run concurrently or serially depending on toggle
+        // Logic: mowing + hedges happen in parallel (both crews busy), beds are additive if solo or if separate from mow
+        const mowOnsite = inclMow ? calcOnsiteTime(
+            isManualTimeMode ? Math.ceil(manualTimeMins * DIFFICULTY_MULTIPLIERS[document.getElementById('difficultyLevel').value].multiplier) :
+            calculateMowing(totalArea, document.getElementById('serviceType').value, document.getElementById('difficultyLevel').value).bMins, crew) : 0;
+        const splitHedgeFinal = document.getElementById('splitHedgeTime').checked;
+        const splitBedFinal = document.getElementById('splitBedTime').checked;
+        const hedgeOnsite = inclHedge ? (splitHedgeFinal ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins) : 0;
+        const bedOnsite = inclBed ? (splitBedFinal ? calcOnsiteTime(bedBudgMins, crew) : bedBudgMins) : 0;
+        // Mowing and hedging run in parallel; beds are sequential (different task)
+        const parallelOnsite = Math.max(mowOnsite, hedgeOnsite);
+        const totalOnsiteMins = parallelOnsite + bedOnsite;
+
+        document.getElementById('resCrewSize').textContent = crewLabel;
+        document.getElementById('resOnsiteTime').textContent = formatMins(totalOnsiteMins);
+        document.getElementById('timeBreakdownBox').style.display = 'block';
 
         document.getElementById('resGrandTotal').textContent = '$' + grandTotal.toFixed(2);
         captureMapSnapshot();
@@ -1017,6 +1142,7 @@
                 ${fcHtml}
                 <div class="pdf-info-item"><div class="pdf-info-label">RM18 Material Fee</div><div class="pdf-info-value">${document.getElementById('resBedMaterial').textContent}</div></div>
                 <div class="pdf-info-item"><div class="pdf-info-label">Debris Disposal</div><div class="pdf-info-value">${document.getElementById('resBedDisposal').textContent}</div></div>
+                <div class="pdf-info-item onsite-highlight"><div class="pdf-info-label">⏰ Est. Bed Time</div><div class="pdf-info-value">${document.getElementById('resBedTime').textContent}</div></div>
                 <div class="pdf-info-item highlight"><div class="pdf-info-label">Bed Total</div><div class="pdf-info-value">${document.getElementById('resBedTotal').textContent}</div></div>
             </div></div>`;
         }
@@ -1031,9 +1157,16 @@
                 <div class="pdf-info-item"><div class="pdf-info-label">Base Price</div><div class="pdf-info-value">${document.getElementById('resHedgeBase').textContent}</div></div>
                 ${fcHtml}
                 <div class="pdf-info-item"><div class="pdf-info-label">Disposal</div><div class="pdf-info-value">${document.getElementById('resHedgeDisposal').textContent}</div></div>
+                <div class="pdf-info-item onsite-highlight"><div class="pdf-info-label">⏰ Est. Hedge Time</div><div class="pdf-info-value">${document.getElementById('resHedgeTime').textContent}</div></div>
                 <div class="pdf-info-item highlight"><div class="pdf-info-label">Hedge Total</div><div class="pdf-info-value">${document.getElementById('resHedgeTotal').textContent}</div></div>
             </div></div>`;
         }
+
+        // Total stop time box for PDF
+        const totalStopTimeSec = `<div style="background:#eef2ff;border:2px solid #818cf8;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;">⏱️ Total On-Site Time (${document.getElementById('resCrewSize').textContent})</div><div style="font-size:11px;color:#818cf8;margin-top:3px;">Mow/hedge run in parallel · Beds sequential</div></div>
+            <div style="font-size:24px;font-weight:800;color:#3730a3;">${document.getElementById('resOnsiteTime').textContent}</div>
+        </div>`;
 
         const mapHtml = mapSnapshot
             ? `<div class="pdf-section"><div class="pdf-section-title">Property Map</div><img src="${mapSnapshot}" style="width:100%;max-height:400px;object-fit:contain;border:2px solid #21A348;border-radius:12px;margin-top:15px;"></div>`
@@ -1074,6 +1207,7 @@
             <div class="pdf-info-item"><div class="pdf-info-label">Property Address</div><div class="pdf-info-value">${propertyAddress || 'Not entered'}</div></div>
         </div></div>
         ${mowSec}${bedSec}${hedgeSec}
+        ${totalStopTimeSec}
         <div class="grand-box"><div class="grand-label">Total Estimate</div><div class="grand-amount">${grandTotal}</div></div>
         ${mapHtml}
         <div class="pdf-footer">
