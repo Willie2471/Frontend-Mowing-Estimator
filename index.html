@@ -82,6 +82,42 @@
         .total-box-amount { font-weight: 800; font-size: 30px; }
         .surcharge-badge { display: inline-block; background: #f59e0b; color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; margin-left: 6px; }
         .include-mowing-bar { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
+
+        /* ===== CREW & TIME ESTIMATE STYLES ===== */
+        .crew-time-bar {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            border: 2px solid #4338ca;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        @media (max-width: 640px) { .crew-time-bar { grid-template-columns: 1fr; } }
+        .crew-time-bar label { color: #c7d2fe; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+        .crew-time-bar select, .crew-time-bar input { background: rgba(255,255,255,0.1); border: 1.5px solid rgba(165,180,252,0.5); border-radius: 10px; color: white; padding: 10px 14px; font-size: 14px; font-weight: 600; width: 100%; }
+        .crew-time-bar select:focus, .crew-time-bar input:focus { outline: none; border-color: #818cf8; background: rgba(255,255,255,0.15); }
+        .crew-time-bar select option { background: #312e81; color: white; }
+        .crew-time-bar .bar-title { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
+        .crew-time-bar .bar-title-text { color: white; font-weight: 700; font-size: 15px; }
+        .crew-time-bar .bar-subtitle { color: #a5b4fc; font-size: 12px; margin-top: 2px; }
+
+        /* Manual time override section */
+        .manual-time-section { display: none; }
+        .manual-time-section.visible { display: block; }
+        .manual-time-note { background: #fef9c3; border: 1.5px solid #fde047; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #713f12; margin-top: 10px; }
+
+        /* On-site time display badge */
+        .onsite-badge { display: inline-flex; align-items: center; gap: 6px; background: #eef2ff; border: 1.5px solid #818cf8; border-radius: 8px; padding: 4px 10px; font-size: 13px; font-weight: 700; color: #3730a3; margin-top: 4px; }
+
+        /* Result time breakdown */
+        .time-breakdown-box { background: #eef2ff; border: 1.5px solid #818cf8; border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; }
+        .time-breakdown-box .tbb-title { font-size: 12px; font-weight: 700; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .time-breakdown-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 3px 0; }
+        .time-breakdown-row .tbd-label { color: #6b7280; }
+        .time-breakdown-row .tbd-value { font-weight: 700; color: #1f2937; }
+        .time-breakdown-row.highlight .tbd-value { color: #4338ca; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -130,6 +166,7 @@
                         <li><strong>Polygon mode:</strong> Click around edges of grass areas — double-click to complete</li>
                         <li><strong>Linear mode:</strong> Click points along hedge/bed edges — double-click the last point to lock in each segment, then immediately draw the next</li>
                         <li>Draw multiple areas as needed (front + back yards, multiple bed sections)</li>
+                        <li>If satellite imagery is unclear, use <strong>"Can't Measure — Enter Time"</strong> below to skip drawing and enter estimated time directly</li>
                     </ol>
                 </div>
                 <!-- Map Mode Buttons -->
@@ -144,11 +181,11 @@
                         <span style="font-size:16px;">⛶</span> <span class="hidden sm:inline">Open</span> Fullscreen Map
                     </button>
                 </div>
-                <!-- Map wrapper — map lives here normally -->
+                <!-- Map wrapper -->
                 <div id="mapWrapper" style="width:100%;height:400px;position:relative;" class="rounded-xl border-2 border-gray-300 shadow-lg bg-gray-200 md:h-[500px]">
                     <div id="map" style="width:100%;height:100%;"></div>
                 </div>
-                <!-- Fullscreen overlay — map gets teleported here when fullscreen -->
+                <!-- Fullscreen overlay -->
                 <div id="mapFullscreenOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;background:#000;"></div>
                 <div id="floatingControls" class="floating-controls">
                     <div class="zoom-controls">
@@ -185,6 +222,50 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ===== CAN'T MEASURE / MANUAL TIME OVERRIDE ===== -->
+                <div class="mt-6 border-t-2 border-dashed border-gray-200 pt-5">
+                    <div class="flex items-start gap-3 mb-3">
+                        <input type="checkbox" id="manualTimeToggle" class="mt-1" style="width:18px;height:18px;accent-color:#6366f1;flex-shrink:0;" onchange="toggleManualTime()">
+                        <div>
+                            <div class="font-bold text-gray-800 text-sm">🚫 Can't Measure — Enter Estimated Time Instead</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Use when satellite imagery is unclear, obstructed by trees, or property cannot be accurately measured. Staff enter estimated mow time directly — pricing will be calculated from time, not square footage.</div>
+                        </div>
+                    </div>
+                    <div id="manualTimeSection" class="manual-time-section">
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-indigo-900 font-semibold mb-2 text-sm">Estimated Mow Time (minutes)</label>
+                                    <input type="number" id="manualTimeMins" class="form-input" placeholder="e.g. 45" min="1" max="480" oninput="updateManualTimeDisplay()">
+                                    <div class="text-xs text-indigo-600 mt-1">Enter total estimated mow time for a solo crew member</div>
+                                </div>
+                                <div>
+                                    <label class="block text-indigo-900 font-semibold mb-2 text-sm">Reason for Manual Entry</label>
+                                    <select id="manualTimeReason" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none text-sm">
+                                        <option value="tree_cover">Heavy tree cover / canopy</option>
+                                        <option value="imagery_old">Satellite imagery outdated</option>
+                                        <option value="resolution">Low resolution / unclear imagery</option>
+                                        <option value="structure_cover">Structure / roof obstruction</option>
+                                        <option value="staff_visited">Staff already visited property</option>
+                                        <option value="customer_info">Customer provided info directly</option>
+                                        <option value="other">Other reason</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="manual-time-note mt-2">
+                                ⚠️ <strong>Manual time bypasses square footage.</strong> Mowing price is calculated directly from your entered minutes × $91/hr rate × difficulty multiplier. Area will show as "Est. (manual)" in the estimate.
+                            </div>
+                            <div id="manualTimePreview" class="hidden mt-3 bg-indigo-100 rounded-lg p-3 text-sm text-indigo-900 font-semibold"></div>
+                        </div>
+                        <!-- Show step 3 when manual time is entered -->
+                        <div class="mt-3 flex justify-end">
+                            <button onclick="applyManualTimeToStep3()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-indigo-700 transition">
+                                ✅ Use This Estimate — Go to Services
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -193,6 +274,32 @@
             <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 border-2 border-green-200">
                 <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-1">Step 3: Select Services</h2>
                 <p class="text-sm text-gray-500 mb-5">Select all services needed. Mix and match for full-package or add-on quotes.</p>
+
+                <!-- ===== CREW SIZE & TIME ESTIMATE BAR ===== -->
+                <div class="crew-time-bar mb-5">
+                    <div class="bar-title">
+                        <span style="font-size:22px;">👷</span>
+                        <div>
+                            <div class="bar-title-text">Crew & Time Settings</div>
+                            <div class="bar-subtitle">Affects on-site time calculation for all mowing services</div>
+                        </div>
+                    </div>
+                    <div>
+                        <label>Crew Size</label>
+                        <select id="crewSize" onchange="recalcCrewTime()">
+                            <option value="1">1 Person (Solo)</option>
+                            <option value="2" selected>2 Person Crew</option>
+                            <option value="3">3 Person Crew</option>
+                            <option value="4">4 Person Crew</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Crew Time Preview</label>
+                        <div id="crewTimePreview" style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(165,180,252,0.5);border-radius:10px;padding:10px 14px;color:white;font-weight:700;font-size:14px;min-height:42px;display:flex;align-items:center;">
+                            — draw a lawn area first
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Include Mowing Toggle -->
                 <div class="include-mowing-bar">
@@ -215,7 +322,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label class="block text-gray-700 font-semibold mb-2 text-sm">Service Type</label>
-                                <select id="serviceType" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base">
+                                <select id="serviceType" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base" onchange="recalcCrewTime()">
                                     <option value="">Select service...</option>
                                     <option value="standard">Stand-On Mowing</option>
                                     <option value="push">Push Mowing - Bagged</option>
@@ -223,7 +330,7 @@
                             </div>
                             <div>
                                 <label class="block text-gray-700 font-semibold mb-2 text-sm">Difficulty Level</label>
-                                <select id="difficultyLevel" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base">
+                                <select id="difficultyLevel" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none text-base" onchange="recalcCrewTime()">
                                     <option value="standard">Standard (Flat)</option>
                                     <option value="sloped">Sloped/Hilly</option>
                                     <option value="extreme">Extreme/Obstacles</option>
@@ -412,6 +519,26 @@
                     <strong>Address:</strong> <span id="resultAddress" class="text-gray-600 text-xs">-</span>
                 </div>
 
+                <!-- Time Breakdown Box (new) -->
+                <div class="time-breakdown-box" id="timeBreakdownBox">
+                    <div class="tbb-title">⏱️ Time Summary</div>
+                    <div class="time-breakdown-row">
+                        <span class="tbd-label">Budgeted Time (1 person)</span>
+                        <span class="tbd-value" id="resBudgetedTime">—</span>
+                    </div>
+                    <div class="time-breakdown-row">
+                        <span class="tbd-label">Crew Size</span>
+                        <span class="tbd-value" id="resCrewSize">—</span>
+                    </div>
+                    <div class="time-breakdown-row highlight">
+                        <span class="tbd-label" style="font-weight:600;color:#374151;">⏰ On-Site Time</span>
+                        <span class="tbd-value" id="resOnsiteTime">—</span>
+                    </div>
+                    <div id="manualTimeNotice" style="display:none;" class="mt-2 text-xs text-indigo-700 bg-indigo-50 rounded p-2 font-medium">
+                        ⚠️ Time based on manual staff estimate — satellite measurement not available
+                    </div>
+                </div>
+
                 <!-- Mowing Results -->
                 <div id="mowingResults" class="result-section">
                     <div class="result-section-header">🌿 Lawn Mowing</div>
@@ -419,7 +546,9 @@
                     <div class="result-row"><span class="result-label">Service Type</span><span class="result-value" id="resMowService">-</span></div>
                     <div class="result-row"><span class="result-label">Difficulty</span><span class="result-value" id="resMowDifficulty">-</span></div>
                     <div class="result-row"><span class="result-label">Frequency</span><span class="result-value" id="resMowFrequency">-</span></div>
-                    <div class="result-row"><span class="result-label">Budgeted Time</span><span class="result-value green" id="resMowBHrs">-</span></div>
+                    <div class="result-row"><span class="result-label">Budgeted Time (Solo)</span><span class="result-value green" id="resMowBHrs">-</span></div>
+                    <div class="result-row"><span class="result-label">Crew Size</span><span class="result-value" id="resMowCrew">-</span></div>
+                    <div class="result-row" style="background:#eef2ff;"><span class="result-label" style="font-weight:700;color:#3730a3;">⏰ On-Site Time</span><span class="result-value" style="color:#3730a3;font-size:16px;" id="resMowOnsite">-</span></div>
                     <div class="result-row"><span class="result-label">Mowing Price</span><span class="result-value green" id="resMowPrice">-</span></div>
                 </div>
 
@@ -498,9 +627,10 @@
 
     let map, drawingManager, autocomplete, marker;
     let polygons = [], totalArea = 0, propertyAddress = '', customerName = '', mapSnapshot = null;
-    // Linear measurement state
     let linearPolylines = [], linearMeasurements = [], totalLinearFt = 0;
     let isLinearMode = false, linearClickListener = null, previewLine = null, currentLinearPoints = [], linearLabels = [];
+    // Manual time state
+    let isManualTimeMode = false, manualTimeMins = 0;
 
     // ===== CALCULATIONS =====
     function calculateMowing(area, svcType, difficulty) {
@@ -514,6 +644,92 @@
         const overage = Math.max(0, area - B_HRS_TRIGGER);
         const bMins = Math.ceil((B_HRS_MIN + overage / 1000 * B_HRS_STEP_RATE) * svcMult * diff.multiplier * 60);
         return { price: finalPrice, bMins };
+    }
+
+    // Calculate mowing from manual time entry
+    function calculateMowingFromTime(timeMins, svcType, difficulty) {
+        const diff = DIFFICULTY_MULTIPLIERS[difficulty];
+        const minCharge = svcType === 'standard' ? MINIMUM_CHARGE_STANDON : MINIMUM_CHARGE_PUSH;
+        // Price: entered minutes / 60 * hourly rate * difficulty multiplier
+        let price = (timeMins / 60) * HOURLY_RATE * diff.multiplier;
+        let finalPrice = Math.max(minCharge, price);
+        finalPrice = finalPrice < 100 ? Math.round(finalPrice / 5) * 5 : Math.round(finalPrice / 10) * 10;
+        // bMins = entered time × difficulty (already staff estimate, just apply difficulty)
+        const bMins = Math.ceil(timeMins * diff.multiplier);
+        return { price: finalPrice, bMins };
+    }
+
+    // ===== CREW SIZE HELPERS =====
+    function getCrewSize() {
+        return parseInt(document.getElementById('crewSize').value) || 1;
+    }
+
+    function calcOnsiteTime(bMins, crewSize) {
+        return Math.ceil(bMins / crewSize);
+    }
+
+    function formatMins(mins) {
+        if (mins < 60) return mins + ' min';
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
+    }
+
+    // Live crew time preview in Step 3 header
+    function recalcCrewTime() {
+        const svc = document.getElementById('serviceType').value;
+        const diff = document.getElementById('difficultyLevel').value;
+        const crew = getCrewSize();
+        const preview = document.getElementById('crewTimePreview');
+
+        if (isManualTimeMode && manualTimeMins > 0 && svc && diff) {
+            const result = calculateMowingFromTime(manualTimeMins, svc, diff);
+            const onsite = calcOnsiteTime(result.bMins, crew);
+            preview.textContent = `Budgeted: ${formatMins(result.bMins)} → On-site: ${formatMins(onsite)} (${crew}-person crew)`;
+            return;
+        }
+
+        if (!svc || !diff || totalArea === 0) {
+            preview.textContent = '— draw a lawn area or enter time first';
+            return;
+        }
+        const result = calculateMowing(totalArea, svc, diff);
+        const onsite = calcOnsiteTime(result.bMins, crew);
+        preview.textContent = `Budgeted: ${formatMins(result.bMins)} → On-site: ${formatMins(onsite)} (${crew}-person crew)`;
+    }
+
+    // ===== MANUAL TIME MODE =====
+    function toggleManualTime() {
+        const checked = document.getElementById('manualTimeToggle').checked;
+        const section = document.getElementById('manualTimeSection');
+        section.classList.toggle('visible', checked);
+        if (!checked) {
+            isManualTimeMode = false;
+            manualTimeMins = 0;
+        }
+    }
+
+    function updateManualTimeDisplay() {
+        const mins = parseInt(document.getElementById('manualTimeMins').value) || 0;
+        const preview = document.getElementById('manualTimePreview');
+        if (mins > 0) {
+            const hrs = (mins / 60).toFixed(2);
+            const basePrice = (mins / 60) * HOURLY_RATE;
+            preview.classList.remove('hidden');
+            preview.innerHTML = `${mins} min = ${hrs} hrs &nbsp;·&nbsp; Base price (standard): ~$${basePrice.toFixed(2)} before difficulty`;
+        } else {
+            preview.classList.add('hidden');
+        }
+    }
+
+    function applyManualTimeToStep3() {
+        const mins = parseInt(document.getElementById('manualTimeMins').value) || 0;
+        if (mins < 1) { alert('Please enter estimated mow time in minutes'); return; }
+        isManualTimeMode = true;
+        manualTimeMins = mins;
+        document.getElementById('step3').classList.remove('hidden');
+        document.getElementById('step3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        recalcCrewTime();
     }
 
     function calculateBed() {
@@ -603,7 +819,6 @@
         isLinearMode = mode === 'linear';
         document.getElementById('polygonModeBtn').classList.toggle('active', !isLinearMode);
         document.getElementById('linearModeBtn').classList.toggle('active', isLinearMode);
-
         if (!drawingManager) return;
         if (isLinearMode) {
             drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
@@ -617,32 +832,13 @@
         for (let i = 1; i < points.length; i++) {
             meters += google.maps.geometry.spherical.computeDistanceBetween(points[i-1], points[i]);
         }
-        return meters * 3.28084; // convert to feet
-    }
-
-    function getMidpoint(points) {
-        const mid = Math.floor(points.length / 2);
-        return points[mid];
-    }
-
-    function showTempLabel(pos, text) {
-        // Remove old temp labels
-        if (map._tempLabel) map._tempLabel.close();
-        const iw = new google.maps.InfoWindow({
-            content: `<div style="font-size:12px;font-weight:600;color:#92400e;">${text}</div>`,
-            disableAutoPan: true
-        });
-        iw.setPosition(pos);
-        iw.open(map);
-        map._tempLabel = iw;
-        setTimeout(() => { iw.close(); }, 1500);
+        return meters * 3.28084;
     }
 
     function updateLinearPanel() {
         totalLinearFt = linearMeasurements.reduce((a, b) => a + b, 0);
         document.getElementById('totalLinearFt').textContent = Math.round(totalLinearFt);
         document.getElementById('totalLinearDisplay').textContent = Math.round(totalLinearFt) + ' linear ft';
-
         let html = '';
         linearMeasurements.forEach((ft, i) => {
             html += `<div class="linear-measure-item">
@@ -650,17 +846,11 @@
                 <span class="font-bold text-amber-900">${Math.round(ft)} linear ft</span>
             </div>`;
         });
-        document.getElementById('linearList').innerHTML = html || '<p class="text-amber-700 text-xs">No segments yet — switch to Linear mode, click your points, then double-click to finish</p>';
-
+        document.getElementById('linearList').innerHTML = html || '<p class="text-amber-700 text-xs">No segments yet</p>';
         const panel = document.getElementById('linearPanel');
         panel.style.display = linearMeasurements.length > 0 ? 'block' : 'none';
-
-        // Reveal Step 3 when linear measurements exist, even without polygons
-        if (linearMeasurements.length > 0) {
-            document.getElementById('step3').classList.remove('hidden');
-        } else if (polygons.length === 0) {
-            document.getElementById('step3').classList.add('hidden');
-        }
+        if (linearMeasurements.length > 0) document.getElementById('step3').classList.remove('hidden');
+        else if (polygons.length === 0 && !isManualTimeMode) document.getElementById('step3').classList.add('hidden');
     }
 
     function clearLinearMeasurements() {
@@ -672,21 +862,19 @@
         linearLabels = [];
         document.getElementById('linearPanel').style.display = 'none';
         document.getElementById('totalLinearDisplay').textContent = '0 linear ft';
-        if (polygons.length === 0) document.getElementById('step3').classList.add('hidden');
-        // Stay in current drawing mode
+        if (polygons.length === 0 && !isManualTimeMode) document.getElementById('step3').classList.add('hidden');
         if (drawingManager && isLinearMode) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
     }
 
     function clearAll() {
-        // Clear polygons
         polygons.forEach(p => p.setMap(null)); polygons = []; totalArea = 0;
         document.getElementById('totalArea').textContent = '0 sq ft';
         document.getElementById('areasList').innerHTML = '<p class="text-gray-500 text-sm">No areas drawn yet</p>';
-        document.getElementById('step3').classList.add('hidden');
-        // Clear linear
+        if (!isManualTimeMode) document.getElementById('step3').classList.add('hidden');
         clearLinearMeasurements();
         document.getElementById('resultsModal').classList.remove('active');
         if (drawingManager && !isLinearMode) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+        recalcCrewTime();
     }
 
     // ===== CALCULATE BUTTON =====
@@ -698,32 +886,64 @@
         const inclBed = document.getElementById('includeBed').checked;
         const inclHedge = document.getElementById('includeHedge').checked;
         if (!inclMow && !inclBed && !inclHedge) { alert('Please select at least one service'); return; }
-        if (inclMow && (!document.getElementById('serviceType').value || totalArea === 0)) { alert('Please select a mowing service type and draw your lawn area'); return; }
+
+        // Validate mowing requirements
+        if (inclMow) {
+            const svc = document.getElementById('serviceType').value;
+            if (!svc) { alert('Please select a mowing service type'); return; }
+            if (!isManualTimeMode && totalArea === 0) { alert('Please draw your lawn area on the map, or use "Can\'t Measure" to enter time manually'); return; }
+            if (isManualTimeMode && manualTimeMins < 1) { alert('Please enter estimated mow time in minutes'); return; }
+        }
 
         customerName = `${firstName} ${lastName}`;
         document.getElementById('resultCustomerName').textContent = customerName;
         document.getElementById('resultAddress').textContent = propertyAddress || 'Not entered';
         let grandTotal = 0;
+        const crew = getCrewSize();
+        const crewLabel = crew === 1 ? '1 Person (Solo)' : `${crew}-Person Crew`;
 
         // Mowing
         if (inclMow) {
             const svc = document.getElementById('serviceType').value;
             const diff = document.getElementById('difficultyLevel').value;
             const freq = document.getElementById('frequency').value;
-            const mow = calculateMowing(totalArea, svc, diff);
+
+            let mow, areaLabel;
+            if (isManualTimeMode) {
+                mow = calculateMowingFromTime(manualTimeMins, svc, diff);
+                const reasonEl = document.getElementById('manualTimeReason');
+                const reasonText = reasonEl.options[reasonEl.selectedIndex].text;
+                areaLabel = `Est. (manual) — ${reasonText}`;
+            } else {
+                mow = calculateMowing(totalArea, svc, diff);
+                areaLabel = totalArea.toLocaleString() + ' sq ft';
+            }
+
+            const onsiteMins = calcOnsiteTime(mow.bMins, crew);
             const svcNames = {standard:'Stand-On Mowing', push:'Push Mowing - Bagged'};
             const diffNames = {standard:'Standard (Flat)', sloped:'Sloped/Hilly', extreme:'Extreme/Obstacles'};
             const freqNames = {onetime:'One-time', weekly:'Weekly', biweekly:'Bi-weekly', monthly:'Monthly'};
-            document.getElementById('resMowArea').textContent = totalArea.toLocaleString() + ' sq ft';
+
+            document.getElementById('resMowArea').textContent = areaLabel;
             document.getElementById('resMowService').textContent = svcNames[svc];
             document.getElementById('resMowDifficulty').textContent = diffNames[diff];
             document.getElementById('resMowFrequency').textContent = freqNames[freq];
-            document.getElementById('resMowBHrs').textContent = mow.bMins + ' mins';
+            document.getElementById('resMowBHrs').textContent = formatMins(mow.bMins);
+            document.getElementById('resMowCrew').textContent = crewLabel;
+            document.getElementById('resMowOnsite').textContent = formatMins(onsiteMins);
             document.getElementById('resMowPrice').textContent = '$' + mow.price.toFixed(2);
             document.getElementById('mowingResults').style.display = 'block';
             grandTotal += mow.price;
+
+            // Time breakdown box
+            document.getElementById('resBudgetedTime').textContent = formatMins(mow.bMins);
+            document.getElementById('resCrewSize').textContent = crewLabel;
+            document.getElementById('resOnsiteTime').textContent = formatMins(onsiteMins);
+            document.getElementById('timeBreakdownBox').style.display = 'block';
+            document.getElementById('manualTimeNotice').style.display = isManualTimeMode ? 'block' : 'none';
         } else {
             document.getElementById('mowingResults').style.display = 'none';
+            document.getElementById('timeBreakdownBox').style.display = 'none';
         }
 
         // Bed
@@ -781,7 +1001,9 @@
                 <div class="pdf-info-item"><div class="pdf-info-label">Service Type</div><div class="pdf-info-value">${document.getElementById('resMowService').textContent}</div></div>
                 <div class="pdf-info-item"><div class="pdf-info-label">Difficulty</div><div class="pdf-info-value">${document.getElementById('resMowDifficulty').textContent}</div></div>
                 <div class="pdf-info-item"><div class="pdf-info-label">Frequency</div><div class="pdf-info-value">${document.getElementById('resMowFrequency').textContent}</div></div>
-                <div class="pdf-info-item"><div class="pdf-info-label">Budgeted Time</div><div class="pdf-info-value">${document.getElementById('resMowBHrs').textContent}</div></div>
+                <div class="pdf-info-item"><div class="pdf-info-label">Budgeted Time (Solo)</div><div class="pdf-info-value">${document.getElementById('resMowBHrs').textContent}</div></div>
+                <div class="pdf-info-item"><div class="pdf-info-label">Crew Size</div><div class="pdf-info-value">${document.getElementById('resMowCrew').textContent}</div></div>
+                <div class="pdf-info-item highlight"><div class="pdf-info-label">⏰ On-Site Time</div><div class="pdf-info-value">${document.getElementById('resMowOnsite').textContent}</div></div>
                 <div class="pdf-info-item highlight"><div class="pdf-info-label">Mowing Price</div><div class="pdf-info-value">${document.getElementById('resMowPrice').textContent}</div></div>
             </div></div>`;
         }
@@ -832,6 +1054,7 @@
         .pdf-info-label{font-size:12px;color:#6b7280;margin-bottom:4px;}
         .pdf-info-value{font-size:15px;font-weight:600;color:#374151;}
         .highlight{background:#dcfce7!important;}.highlight .pdf-info-value{color:#16a34a;font-size:18px;}
+        .onsite-highlight{background:#eef2ff!important;border:1px solid #818cf8!important;}.onsite-highlight .pdf-info-value{color:#3730a3;font-size:18px;}
         .surcharge{background:#fef3c7!important;}.surcharge .pdf-info-value{color:#d97706;}
         .grand-box{background:linear-gradient(135deg,#166534,#15803d);color:white;border-radius:12px;padding:18px 20px;margin:20px 0;display:flex;justify-content:space-between;align-items:center;}
         .grand-label{font-weight:600;font-size:14px;opacity:0.85;text-transform:uppercase;letter-spacing:1px;}
@@ -875,14 +1098,8 @@
                 const overlay = document.getElementById('mapFullscreenOverlay');
                 const fc = document.getElementById('floatingControls');
                 const isExpanded = overlay.style.display === 'block';
-
                 if (!isExpanded) {
-                    // Save state
-                    if (map) {
-                        fsBtn._savedCenter = map.getCenter();
-                        fsBtn._savedZoom = map.getZoom();
-                    }
-                    // Move map div into fullscreen overlay
+                    if (map) { fsBtn._savedCenter = map.getCenter(); fsBtn._savedZoom = map.getZoom(); }
                     overlay.appendChild(mapEl);
                     mapEl.style.width = '100vw';
                     mapEl.style.height = '100vh';
@@ -891,12 +1108,8 @@
                     if (fc) fc.classList.add('active');
                     fsBtn.innerHTML = '<span style="font-size:18px;">✕</span> <span class="exit-text">Exit</span>';
                     fsBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:1000000;background:#16a34a;color:white;padding:8px 16px;border-radius:8px;font-weight:600;border:none;cursor:pointer;';
-                    setTimeout(() => {
-                        google.maps.event.trigger(map, 'resize');
-                        if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter);
-                    }, 100);
+                    setTimeout(() => { google.maps.event.trigger(map, 'resize'); if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter); }, 100);
                 } else {
-                    // Move map div back into wrapper
                     mapWrapper.appendChild(mapEl);
                     mapEl.style.width = '100%';
                     mapEl.style.height = '100%';
@@ -905,15 +1118,12 @@
                     if (fc) fc.classList.remove('active');
                     fsBtn.innerHTML = '<span style="font-size:20px;">⛶</span> <span class="hidden sm:inline">Open</span> Fullscreen Map';
                     fsBtn.style.cssText = '';
-                    // Fire multiple resizes to guarantee tile reload
                     const restoreMap = () => {
                         google.maps.event.trigger(map, 'resize');
                         if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter);
                         if (fsBtn._savedZoom) map.setZoom(fsBtn._savedZoom);
                     };
-                    setTimeout(restoreMap, 50);
-                    setTimeout(restoreMap, 200);
-                    setTimeout(restoreMap, 500);
+                    setTimeout(restoreMap, 50); setTimeout(restoreMap, 200); setTimeout(restoreMap, 500);
                 }
             });
         }
@@ -931,12 +1141,7 @@
         let isDrawing = false;
         document.getElementById('drawingBtn').addEventListener('click', function() {
             if (!drawingManager) return; isDrawing = !isDrawing;
-            if (isDrawing && isLinearMode) {
-                // Switch back to polygon mode first
-                setMapMode('polygon');
-                document.getElementById('linearBtn').classList.remove('active-linear');
-                document.getElementById('linearBtn').textContent = '📏 Linear';
-            }
+            if (isDrawing && isLinearMode) { setMapMode('polygon'); document.getElementById('linearBtn').classList.remove('active-linear'); document.getElementById('linearBtn').textContent = '📏 Linear'; }
             drawingManager.setDrawingMode(isDrawing ? google.maps.drawing.OverlayType.POLYGON : null);
             this.classList.toggle('active-draw', isDrawing);
             this.textContent = isDrawing ? '⏸️ Stop' : '✏️ Draw';
@@ -954,7 +1159,6 @@
             setMapMode(nowLinear ? 'linear' : 'polygon');
             this.classList.toggle('active-linear', nowLinear);
             this.textContent = nowLinear ? '⏹️ Stop Linear' : '📏 Linear';
-            // sync drawing btn
             const drawBtn = document.getElementById('drawingBtn');
             if (drawBtn) { drawBtn.classList.toggle('active-draw', !nowLinear); drawBtn.textContent = nowLinear ? '✏️ Draw' : '⏸️ Stop'; }
         });
@@ -1034,8 +1238,8 @@
         if (polygons.length === 0) {
             list.innerHTML = '<p class="text-gray-500 text-sm">No areas drawn yet</p>';
             document.getElementById('totalArea').textContent = '0 sq ft';
-            // Only hide step3 if there are also no linear measurements
-            if (linearMeasurements.length === 0) document.getElementById('step3').classList.add('hidden');
+            if (linearMeasurements.length === 0 && !isManualTimeMode) document.getElementById('step3').classList.add('hidden');
+            recalcCrewTime();
             return;
         }
         let html = '<div class="space-y-2"><p class="font-semibold text-gray-700 mb-2 text-sm">Individual Areas:</p>';
@@ -1048,15 +1252,17 @@
         list.innerHTML = html;
         document.getElementById('totalArea').textContent = totalArea.toLocaleString() + ' sq ft';
         document.getElementById('step3').classList.remove('hidden');
+        recalcCrewTime();
     }
 
     document.getElementById('clearBtn').addEventListener('click', () => {
         polygons.forEach(p => p.setMap(null)); polygons = []; totalArea = 0;
         document.getElementById('totalArea').textContent = '0 sq ft';
         document.getElementById('areasList').innerHTML = '<p class="text-gray-500 text-sm">No areas drawn yet</p>';
-        document.getElementById('step3').classList.add('hidden');
+        if (!isManualTimeMode) document.getElementById('step3').classList.add('hidden');
         document.getElementById('resultsModal').classList.remove('active');
         if (drawingManager) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+        recalcCrewTime();
     });
 
     document.getElementById('closeModal').addEventListener('click', () => document.getElementById('resultsModal').classList.remove('active'));
@@ -1082,7 +1288,7 @@
 
     window.addEventListener('load', () => {
         setTimeout(() => { if (!autocomplete && typeof google !== 'undefined' && google.maps && google.maps.places) setupAutocomplete(); }, 1000);
-        toggleMowingSection(); // sync panel to initial checkbox state
+        toggleMowingSection();
     });
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBHvZq7kiDX_thzi8F9XTg_bySLcxpd_ME&libraries=places,drawing,geometry&callback=initMap" async defer></script>
