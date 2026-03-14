@@ -630,9 +630,14 @@
                 <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-900 mb-4">
                     <strong>📋 Note:</strong> Final pricing may vary based on actual site conditions. Customer approval required for price changes.
                 </div>
-                <button id="pdfBtn" class="w-full px-6 md:px-8 py-3 md:py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition text-base md:text-lg">
-                    📄 Print / Save as PDF
-                </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button id="pdfBtn" class="px-6 py-3 md:py-4 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-800 transition text-sm md:text-base flex items-center justify-center gap-2">
+                        🗂️ Staff Copy <span class="text-xs opacity-70 font-normal">(full detail)</span>
+                    </button>
+                    <button id="pdfCustomerBtn" class="px-6 py-3 md:py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition text-sm md:text-base flex items-center justify-center gap-2">
+                        📄 Customer Copy <span class="text-xs opacity-70 font-normal">(send to customer)</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1206,6 +1211,141 @@
             <p>This is an estimate. Final pricing subject to site inspection and customer approval.</p>
             <p>All services include: Mowing, Weed Trimming, Edging, and Blowing</p>
         </div></div>
+        <script type="text/javascript">window.onload=function(){setTimeout(function(){window.print();},250);};<\/script>
+        </body></html>`);
+        pw.document.close();
+    });
+
+    // ===== CUSTOMER PDF =====
+    document.getElementById('pdfCustomerBtn').addEventListener('click', () => {
+        const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+        const grandTotal = document.getElementById('resGrandTotal').textContent;
+        const inclMow = document.getElementById('mowingResults').style.display !== 'none';
+        const inclBed = document.getElementById('bedResults').style.display !== 'none';
+        const inclHedge = document.getElementById('hedgeResults').style.display !== 'none';
+
+        // Service type labels — cleaned for customer
+        const svcTypeRaw = document.getElementById('resMowService').textContent;
+        const freqRaw = document.getElementById('resMowFrequency').textContent;
+
+        let mowSec = '', bedSec = '', hedgeSec = '';
+
+        if (inclMow) {
+            mowSec = `<div class="pdf-section">
+                <div class="pdf-section-title">🌿 Lawn Mowing</div>
+                <div class="pdf-info-grid">
+                    <div class="pdf-info-item"><div class="pdf-info-label">Service</div><div class="pdf-info-value">${svcTypeRaw}</div></div>
+                    <div class="pdf-info-item"><div class="pdf-info-label">Frequency</div><div class="pdf-info-value">${freqRaw}</div></div>
+                    <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resMowPrice').textContent}</div></div>
+                </div>
+                <div class="service-includes">✅ Includes: Mowing, Weed Trimming, Edging &amp; Blowing</div>
+            </div>`;
+        }
+
+        if (inclBed) {
+            // Translate internal service label to customer-friendly language
+            const bedSvcRaw = document.getElementById('resBedService').textContent;
+            const bedSvcFriendly = bedSvcRaw.includes('Hybrid') ? 'Hand Weed Removal + Herbicide Treatment'
+                : bedSvcRaw.includes('Pull') ? 'Hand Weed Removal'
+                : 'Herbicide Spray Treatment';
+            const hasDisposal = document.getElementById('resBedDisposal').textContent !== 'Included / N/A' && document.getElementById('resBedDisposal').textContent !== '$0.00';
+            const disposalRow = hasDisposal ? `<div class="pdf-info-item"><div class="pdf-info-label">Debris Removal</div><div class="pdf-info-value">${document.getElementById('resBedDisposal').textContent}</div></div>` : '';
+
+            bedSec = `<div class="pdf-section">
+                <div class="pdf-section-title">🌺 Bed Maintenance</div>
+                <div class="pdf-info-grid">
+                    <div class="pdf-info-item"><div class="pdf-info-label">Service</div><div class="pdf-info-value">${bedSvcFriendly}</div></div>
+                    ${disposalRow}
+                    <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resBedTotal').textContent}</div></div>
+                </div>
+            </div>`;
+        }
+
+        if (inclHedge) {
+            const hedgeCat = document.getElementById('resHedgeCategory').textContent;
+            const hedgeFt = document.getElementById('resHedgeFt').textContent;
+            const hedgeDisp = document.getElementById('resHedgeDisposal').textContent;
+            const hedgeDispRow = hedgeDisp !== 'Included in rate' ? `<div class="pdf-info-item"><div class="pdf-info-label">Clipping Disposal</div><div class="pdf-info-value">${hedgeDisp}</div></div>` : '';
+
+            hedgeSec = `<div class="pdf-section">
+                <div class="pdf-section-title">✂️ Hedge &amp; Shrub Trimming</div>
+                <div class="pdf-info-grid">
+                    <div class="pdf-info-item"><div class="pdf-info-label">Height Category</div><div class="pdf-info-value">${hedgeCat}</div></div>
+                    <div class="pdf-info-item"><div class="pdf-info-label">Linear Footage</div><div class="pdf-info-value">${hedgeFt}</div></div>
+                    ${hedgeDispRow}
+                    <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resHedgeTotal').textContent}</div></div>
+                </div>
+            </div>`;
+        }
+
+        const mapHtml = mapSnapshot
+            ? `<div class="pdf-section"><div class="pdf-section-title">Property Overview</div><img src="${mapSnapshot}" style="width:100%;max-height:380px;object-fit:contain;border:2px solid #21A348;border-radius:12px;margin-top:12px;"></div>`
+            : '';
+
+        const pw = window.open('','_blank','width=900,height=800');
+        pw.document.write(`<!DOCTYPE html><html><head><title>Service Estimate — ${customerName}</title>
+        <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Helvetica Neue',Arial,sans-serif;background:white;color:#1f2937;}
+        .pdf-page{max-width:760px;margin:0 auto;padding:48px 40px;}
+        .pdf-header{text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:3px solid #21A348;}
+        .pdf-logo{max-width:180px;margin:0 auto 14px;display:block;}
+        .pdf-title{font-size:26px;font-weight:800;color:#21A348;margin-bottom:6px;letter-spacing:-0.5px;}
+        .pdf-subtitle{font-size:13px;color:#9ca3af;}
+        .customer-bar{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:16px 20px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        .customer-bar-label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+        .customer-bar-value{font-size:15px;font-weight:700;color:#111827;}
+        .pdf-section{margin-bottom:22px;page-break-inside:avoid;}
+        .pdf-section-title{font-size:16px;font-weight:800;color:#111827;margin-bottom:12px;padding-left:12px;border-left:4px solid #21A348;display:flex;align-items:center;gap:6px;}
+        .pdf-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+        .pdf-info-item{background:#f9fafb;padding:12px 14px;border-radius:10px;border:1px solid #e5e7eb;}
+        .pdf-info-item.full-width{grid-column:1/-1;}
+        .pdf-info-label{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
+        .pdf-info-value{font-size:15px;font-weight:700;color:#1f2937;}
+        .highlight{background:#f0fdf4!important;border:1.5px solid #86efac!important;}
+        .highlight .pdf-info-value{color:#16a34a;font-size:20px;}
+        .service-includes{margin-top:10px;font-size:12px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:8px 12px;border:1px solid #e5e7eb;}
+        .grand-box{background:linear-gradient(135deg,#14532d,#166534,#15803d);color:white;border-radius:14px;padding:22px 26px;margin:24px 0;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(22,101,52,0.25);}
+        .grand-label{font-weight:700;font-size:13px;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;}
+        .grand-date{font-size:11px;opacity:0.6;margin-top:4px;}
+        .grand-amount{font-weight:900;font-size:34px;letter-spacing:-1px;}
+        .validity-note{background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:12px 16px;font-size:12px;color:#92400e;margin-bottom:20px;line-height:1.6;}
+        .pdf-footer{margin-top:32px;padding-top:20px;border-top:2px solid #f3f4f6;text-align:center;font-size:11.5px;color:#9ca3af;line-height:1.8;}
+        .pdf-footer strong{color:#6b7280;}
+        @media print{body{padding:0;}.pdf-page{padding:24px;}}@page{margin:0.5in;}
+        </style></head><body><div class="pdf-page">
+
+        <div class="pdf-header">
+            <img src="https://04bab2c6a63da3ec5306-1c92bab3ac761f2036299816f4cab718.ssl.cf1.rackcdn.com//eaf97ab3-bb79-4ee9-8077-7feb7fb9e12c.png" alt="WS Lawn Care" class="pdf-logo" onerror="this.style.display='none'">
+            <div class="pdf-title">Service Estimate</div>
+            <div class="pdf-subtitle">Prepared for you on ${dateStr}</div>
+        </div>
+
+        <div class="customer-bar">
+            <div><div class="customer-bar-label">Prepared For</div><div class="customer-bar-value">${customerName}</div></div>
+            <div><div class="customer-bar-label">Property Address</div><div class="customer-bar-value">${propertyAddress || 'On file'}</div></div>
+        </div>
+
+        ${mowSec}${bedSec}${hedgeSec}
+
+        <div class="validity-note">
+            📋 <strong>About this estimate:</strong> Prices are based on a property assessment and are valid for 30 days. Final pricing may be adjusted following an on-site visit if conditions differ significantly from the assessment. No work will begin without your approval.
+        </div>
+
+        <div class="grand-box">
+            <div><div class="grand-label">Total Estimate</div><div class="grand-date">Valid through ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div></div>
+            <div class="grand-amount">${grandTotal}</div>
+        </div>
+
+        ${mapHtml}
+
+        <div class="pdf-footer">
+            <p><strong>WS Lawn Care Services, LLC</strong></p>
+            <p>Questions? Contact us to schedule or discuss your service options.</p>
+            <p style="margin-top:8px;font-size:10.5px;">This document is a service estimate and does not constitute a contract. Actual pricing subject to on-site confirmation.</p>
+        </div>
+
+        </div>
         <script type="text/javascript">window.onload=function(){setTimeout(function(){window.print();},250);};<\/script>
         </body></html>`);
         pw.document.close();
