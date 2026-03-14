@@ -300,7 +300,8 @@
                         </div>
                     </div>
                     <div style="grid-column: 1 / -1; display:flex; align-items:flex-start; gap:10px; background:rgba(255,255,255,0.07); border-radius:10px; padding:10px 14px; margin-top:2px;">
-                        <input type="checkbox" id="splitHedgeTime" checked style="width:16px;height:16px;accent-color:#a5b4fc;margin-top:2px;flex-shrink:0;" onchange="recalcCrewTime()">
+                        <!-- FIX 1: splitHedgeTime — removed 'checked' so it defaults to unchecked -->
+                        <input type="checkbox" id="splitHedgeTime" style="width:16px;height:16px;accent-color:#a5b4fc;margin-top:2px;flex-shrink:0;" onchange="recalcCrewTime()">
                         <div>
                             <div style="color:#e0e7ff;font-weight:700;font-size:13px;">✂️ Split hedge time across crew (both running trimmers)</div>
                             <div style="color:#a5b4fc;font-size:11px;margin-top:2px;">Checked = hedge on-site time ÷ crew size &nbsp;|&nbsp; Unchecked = hedge stays as solo estimate</div>
@@ -587,6 +588,7 @@
                 </div>
 
                 <!-- Bed Results -->
+                <!-- FIX 2: Added missing closing </div> at the end of this section -->
                 <div id="bedResults" class="result-section" style="display:none;">
                     <div class="result-section-header">🌺 Bed Maintenance</div>
                     <div class="result-row"><span class="result-label">Service Type</span><span class="result-value" id="resBedService">-</span></div>
@@ -600,6 +602,7 @@
                     <div class="result-row"><span class="result-label">Debris Disposal</span><span class="result-value" id="resBedDisposal">-</span></div>
                     <div class="result-row"><span class="result-label font-semibold text-gray-700">Bed Maintenance Total</span><span class="result-value green" id="resBedTotal">-</span></div>
                     <div class="result-row" style="background:#eef2ff;"><span class="result-label" style="font-weight:700;color:#3730a3;">⏰ Est. Bed Time (solo)</span><span class="result-value" style="color:#3730a3;" id="resBedTime">-</span></div>
+                </div>
 
                 <!-- Hedge Results -->
                 <div id="hedgeResults" class="result-section" style="display:none;">
@@ -616,6 +619,7 @@
                     <div class="result-row"><span class="result-label">Disposal Fee</span><span class="result-value" id="resHedgeDisposal">-</span></div>
                     <div class="result-row"><span class="result-label font-semibold text-gray-700">Hedge / Shrub Total</span><span class="result-value green" id="resHedgeTotal">-</span></div>
                     <div class="result-row" style="background:#eef2ff;"><span class="result-label" style="font-weight:700;color:#3730a3;">⏰ Est. Hedge Time (solo)</span><span class="result-value" style="color:#3730a3;" id="resHedgeTime">-</span></div>
+                </div>
 
                 <!-- Grand Total -->
                 <div class="total-box">
@@ -684,11 +688,9 @@
     function calculateMowingFromTime(timeMins, svcType, difficulty) {
         const diff = DIFFICULTY_MULTIPLIERS[difficulty];
         const minCharge = svcType === 'standard' ? MINIMUM_CHARGE_STANDON : MINIMUM_CHARGE_PUSH;
-        // Price: entered minutes / 60 * hourly rate * difficulty multiplier
         let price = (timeMins / 60) * HOURLY_RATE * diff.multiplier;
         let finalPrice = Math.max(minCharge, price);
         finalPrice = finalPrice < 100 ? Math.round(finalPrice / 5) * 5 : Math.round(finalPrice / 10) * 10;
-        // bMins = entered time × difficulty (already staff estimate, just apply difficulty)
         const bMins = Math.ceil(timeMins * diff.multiplier);
         return { price: finalPrice, bMins };
     }
@@ -731,7 +733,6 @@
             mowOnsite = calcOnsiteTime(mowBudg, crew);
         }
 
-        // Estimate bed time from current inputs
         let bedBudg = 0, bedOnsite = 0;
         if (inclBedCheck) {
             try {
@@ -741,7 +742,6 @@
             } catch(e) {}
         }
 
-        // Estimate hedge time from current inputs
         let hedgeBudg = 0, hedgeOnsite = 0;
         if (inclHedgeCheck) {
             try {
@@ -957,7 +957,6 @@
         const inclHedge = document.getElementById('includeHedge').checked;
         if (!inclMow && !inclBed && !inclHedge) { alert('Please select at least one service'); return; }
 
-        // Validate mowing requirements
         if (inclMow) {
             const svc = document.getElementById('serviceType').value;
             if (!svc) { alert('Please select a mowing service type'); return; }
@@ -1005,7 +1004,6 @@
             document.getElementById('mowingResults').style.display = 'block';
             grandTotal += mow.price;
 
-            // Time breakdown — mowing rows
             document.getElementById('resBudgetedTime').textContent = formatMins(mow.bMins);
             document.getElementById('resMowOnsiteTime').textContent = formatMins(onsiteMins);
             document.getElementById('tbbMowRow').style.display = 'flex';
@@ -1022,7 +1020,6 @@
         let bedBudgMins = 0;
         if (inclBed) {
             const bed = calculateBed();
-            // Back-calculate time: total bed cost / hourly rate * 60 mins
             bedBudgMins = Math.round((bed.total / HOURLY_RATE) * 60);
             const splitBed = document.getElementById('splitBedTime').checked;
             const bedOnsiteMins = splitBed ? calcOnsiteTime(bedBudgMins, crew) : bedBudgMins;
@@ -1041,7 +1038,6 @@
             document.getElementById('bedResults').style.display = 'block';
             grandTotal += bed.total;
 
-            // Time breakdown — bed rows
             document.getElementById('resBedBudgTime').textContent = formatMins(bedBudgMins);
             document.getElementById('resBedOnsiteTime').textContent = formatMins(bedOnsiteMins);
             document.getElementById('tbbBedOnsiteLabel').textContent = splitBed && crew > 1 ? '↳ on-site w/ crew (split)' : '↳ on-site (solo — beds)';
@@ -1057,7 +1053,6 @@
         let hedgeBudgMins = 0;
         if (inclHedge) {
             const hedge = calculateHedge();
-            // Back-calculate time: total hedge cost / hourly rate * 60 mins
             hedgeBudgMins = Math.round((hedge.total / HOURLY_RATE) * 60);
             const splitHedge = document.getElementById('splitHedgeTime').checked;
             const hedgeOnsiteMins = splitHedge ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins;
@@ -1077,7 +1072,6 @@
             document.getElementById('hedgeResults').style.display = 'block';
             grandTotal += hedge.total;
 
-            // Time breakdown — hedge rows
             document.getElementById('resHedgeBudgTime').textContent = formatMins(hedgeBudgMins);
             document.getElementById('resHedgeOnsiteTime').textContent = formatMins(hedgeOnsiteMins);
             document.getElementById('tbbHedgeRow').style.display = 'flex';
@@ -1088,9 +1082,7 @@
             document.getElementById('tbbHedgeOnsiteRow').style.display = 'none';
         }
 
-        // Total on-site time = max of parallel tasks (mow || hedges run simultaneously with mowing)
-        // Beds may run concurrently or serially depending on toggle
-        // Logic: mowing + hedges happen in parallel (both crews busy), beds are additive if solo or if separate from mow
+        // Total on-site time
         const mowOnsite = inclMow ? calcOnsiteTime(
             isManualTimeMode ? Math.ceil(manualTimeMins * DIFFICULTY_MULTIPLIERS[document.getElementById('difficultyLevel').value].multiplier) :
             calculateMowing(totalArea, document.getElementById('serviceType').value, document.getElementById('difficultyLevel').value).bMins, crew) : 0;
@@ -1098,7 +1090,6 @@
         const splitBedFinal = document.getElementById('splitBedTime').checked;
         const hedgeOnsite = inclHedge ? (splitHedgeFinal ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins) : 0;
         const bedOnsite = inclBed ? (splitBedFinal ? calcOnsiteTime(bedBudgMins, crew) : bedBudgMins) : 0;
-        // Mowing and hedging run in parallel; beds are sequential (different task)
         const parallelOnsite = Math.max(mowOnsite, hedgeOnsite);
         const totalOnsiteMins = parallelOnsite + bedOnsite;
 
@@ -1162,7 +1153,6 @@
             </div></div>`;
         }
 
-        // Total stop time box for PDF
         const totalStopTimeSec = `<div style="background:#eef2ff;border:2px solid #818cf8;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
             <div><div style="font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px;">⏱️ Total On-Site Time (${document.getElementById('resCrewSize').textContent})</div><div style="font-size:11px;color:#818cf8;margin-top:3px;">Mow/hedge run in parallel · Beds sequential</div></div>
             <div style="font-size:24px;font-weight:800;color:#3730a3;">${document.getElementById('resOnsiteTime').textContent}</div>
