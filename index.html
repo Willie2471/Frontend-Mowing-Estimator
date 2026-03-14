@@ -691,7 +691,8 @@
         let price = (timeMins / 60) * HOURLY_RATE * diff.multiplier;
         let finalPrice = Math.max(minCharge, price);
         finalPrice = finalPrice < 100 ? Math.round(finalPrice / 5) * 5 : Math.round(finalPrice / 10) * 10;
-        const bMins = Math.ceil(timeMins * diff.multiplier);
+        const svcMult = svcType === 'push' ? 2.5 : 1.0;
+        const bMins = Math.ceil(timeMins * svcMult * diff.multiplier);
         return { price: finalPrice, bMins };
     }
 
