@@ -83,6 +83,120 @@
         .surcharge-badge { display: inline-block; background: #f59e0b; color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; margin-left: 6px; }
         .include-mowing-bar { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
 
+        /* ===== SEASON TOGGLE STYLES ===== */
+        .season-toggle-bar {
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .season-toggle-bar.peak {
+            background: linear-gradient(135deg, #78350f 0%, #92400e 50%, #b45309 100%);
+            border: 2px solid #f59e0b;
+            box-shadow: 0 4px 20px rgba(180,83,9,0.35);
+        }
+        .season-toggle-bar.offpeak {
+            background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 50%, #2563eb 100%);
+            border: 2px solid #60a5fa;
+            box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+        }
+        .season-toggle-bar::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            opacity: 0.07;
+            transition: background 0.4s;
+        }
+        .season-toggle-bar.peak::before { background: #fbbf24; }
+        .season-toggle-bar.offpeak::before { background: #93c5fd; }
+
+        .season-info { flex: 1; min-width: 0; }
+        .season-label-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .season-icon { font-size: 24px; }
+        .season-name { font-size: 18px; font-weight: 800; color: white; letter-spacing: -0.3px; }
+        .season-desc { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+        .season-rates-row { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+        .season-rate-chip {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .season-rate-chip .chip-label { opacity: 0.7; font-weight: 500; }
+
+        /* The actual toggle switch */
+        .season-switch-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+        .season-switch-labels { display: flex; gap: 8px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+        .season-switch-labels span.active-label { color: white; }
+
+        .season-switch {
+            position: relative;
+            width: 72px;
+            height: 36px;
+            cursor: pointer;
+        }
+        .season-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .season-slider {
+            position: absolute;
+            inset: 0;
+            border-radius: 36px;
+            transition: background 0.35s;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .season-slider::before {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            left: 3px;
+            top: 3px;
+            border-radius: 50%;
+            background: white;
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .season-switch input:checked + .season-slider::before {
+            transform: translateX(36px);
+        }
+        .season-switch input:checked + .season-slider {
+            background: rgba(96,165,250,0.4);
+            border-color: rgba(147,197,253,0.6);
+        }
+
+        /* Active rate indicator badge shown globally */
+        .active-rate-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        .active-rate-badge.peak { background: #fef3c7; color: #92400e; border: 1.5px solid #fcd34d; }
+        .active-rate-badge.offpeak { background: #dbeafe; color: #1e40af; border: 1.5px solid #93c5fd; }
+
         /* ===== CREW & TIME ESTIMATE STYLES ===== */
         .crew-time-bar {
             background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
@@ -118,6 +232,19 @@
         .time-breakdown-row .tbd-label { color: #6b7280; }
         .time-breakdown-row .tbd-value { font-weight: 700; color: #1f2937; }
         .time-breakdown-row.highlight .tbd-value { color: #4338ca; font-size: 15px; }
+
+        /* Season mode indicator on results modal */
+        .season-result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .season-result-badge.peak { background: #fef3c7; color: #92400e; }
+        .season-result-badge.offpeak { background: #dbeafe; color: #1e40af; }
     </style>
 </head>
 <body>
@@ -254,7 +381,7 @@
                                 </div>
                             </div>
                             <div class="manual-time-note mt-2">
-                                ⚠️ <strong>Manual time bypasses square footage.</strong> Mowing price is calculated directly from your entered minutes × $158/hr rate × difficulty multiplier. Area will show as "Est. (manual)" in the estimate.
+                                ⚠️ <strong>Manual time bypasses square footage.</strong> Mowing price is calculated directly from your entered minutes × active hourly rate × difficulty multiplier. Area will show as "Est. (manual)" in the estimate.
                             </div>
                             <div id="manualTimePreview" class="hidden mt-3 bg-indigo-100 rounded-lg p-3 text-sm text-indigo-900 font-semibold"></div>
                         </div>
@@ -274,6 +401,42 @@
             <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 border-2 border-green-200">
                 <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-1">Step 3: Select Services</h2>
                 <p class="text-sm text-gray-500 mb-5">Select all services needed. Mix and match for full-package or add-on quotes.</p>
+
+                <!-- ===== SEASON / PRICING MODE TOGGLE ===== -->
+                <div id="seasonToggleBar" class="season-toggle-bar peak">
+                    <div class="season-info">
+                        <div class="season-label-row">
+                            <span id="seasonIcon" class="season-icon">☀️</span>
+                            <span id="seasonName" class="season-name">Peak Season Pricing</span>
+                        </div>
+                        <div id="seasonDesc" class="season-desc">High demand · Full rates apply</div>
+                        <div class="season-rates-row">
+                            <div class="season-rate-chip">
+                                <span class="chip-label">Rate</span>
+                                <span id="seasonRateChip">$158/hr</span>
+                            </div>
+                            <div class="season-rate-chip">
+                                <span class="chip-label">Stand-On Min</span>
+                                <span id="seasonMinStandonChip">$45</span>
+                            </div>
+                            <div class="season-rate-chip">
+                                <span class="chip-label">Push Min</span>
+                                <span id="seasonMinPushChip">$60</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="season-switch-wrap">
+                        <div class="season-switch-labels">
+                            <span id="labelPeak" class="active-label">PEAK</span>
+                            <span id="labelOffpeak">OFF-PEAK</span>
+                        </div>
+                        <label class="season-switch" title="Toggle Peak / Off-Peak pricing">
+                            <input type="checkbox" id="seasonToggleInput" onchange="applySeasonMode()">
+                            <span class="season-slider"></span>
+                        </label>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.5);text-align:center;margin-top:2px;">tap to switch</div>
+                    </div>
+                </div>
 
                 <!-- ===== CREW SIZE & TIME ESTIMATE BAR ===== -->
                 <div class="crew-time-bar mb-5">
@@ -300,7 +463,6 @@
                         </div>
                     </div>
                     <div style="grid-column: 1 / -1; display:flex; align-items:flex-start; gap:10px; background:rgba(255,255,255,0.07); border-radius:10px; padding:10px 14px; margin-top:2px;">
-                        <!-- FIX 1: splitHedgeTime — removed 'checked' so it defaults to unchecked -->
                         <input type="checkbox" id="splitHedgeTime" style="width:16px;height:16px;accent-color:#a5b4fc;margin-top:2px;flex-shrink:0;" onchange="recalcCrewTime()">
                         <div>
                             <div style="color:#e0e7ff;font-weight:700;font-size:13px;">✂️ Split hedge time across crew (both running trimmers)</div>
@@ -361,8 +523,8 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-900">
-                            <strong>📊 Rate Matrix:</strong> Standard $0.0018/sqft · Sloped $0.0023/sqft · Extreme $0.0027/sqft &nbsp;|&nbsp; Push Mow = 2.5x B.Hrs · Min 0.43 B.Hrs (26 min base)
+                        <div id="rateMatrixNote" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-900">
+                            <strong>📊 Rate Matrix:</strong> Standard $0.0018/sqft · Sloped $0.0023/sqft · Extreme $0.0027/sqft &nbsp;|&nbsp; Push Mow = 2.5x B.Hrs · Min 0.43 B.Hrs (26 min base) &nbsp;|&nbsp; <span id="activeRateNote" class="font-bold">☀️ Peak: $158/hr · Stand-On min $45 · Push min $60</span>
                         </div>
                     </div>
                 </div>
@@ -529,9 +691,12 @@
             <div class="modal-content">
                 <button id="closeModal" class="modal-close">×</button>
                 <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-2 text-center">Property Estimate Summary</h2>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
-                    <strong>Customer:</strong> <span id="resultCustomerName">-</span> &nbsp;|&nbsp;
-                    <strong>Address:</strong> <span id="resultAddress" class="text-gray-600 text-xs">-</span>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm flex flex-wrap gap-2 items-center">
+                    <span><strong>Customer:</strong> <span id="resultCustomerName">-</span></span>
+                    <span class="text-gray-300">|</span>
+                    <span><strong>Address:</strong> <span id="resultAddress" class="text-gray-600 text-xs">-</span></span>
+                    <span class="text-gray-300">|</span>
+                    <span id="seasonResultBadge" class="season-result-badge peak">☀️ Peak Pricing</span>
                 </div>
 
                 <!-- Time Breakdown Box -->
@@ -584,11 +749,11 @@
                     <div class="result-row"><span class="result-label">Budgeted Time (Solo)</span><span class="result-value green" id="resMowBHrs">-</span></div>
                     <div class="result-row"><span class="result-label">Crew Size</span><span class="result-value" id="resMowCrew">-</span></div>
                     <div class="result-row" style="background:#eef2ff;"><span class="result-label" style="font-weight:700;color:#3730a3;">⏰ On-Site Time</span><span class="result-value" style="color:#3730a3;font-size:16px;" id="resMowOnsite">-</span></div>
+                    <div class="result-row"><span class="result-label">Pricing Mode</span><span class="result-value" id="resMowPricingMode">-</span></div>
                     <div class="result-row"><span class="result-label">Mowing Price</span><span class="result-value green" id="resMowPrice">-</span></div>
                 </div>
 
                 <!-- Bed Results -->
-                <!-- FIX 2: Added missing closing </div> at the end of this section -->
                 <div id="bedResults" class="result-section" style="display:none;">
                     <div class="result-section-header">🌺 Bed Maintenance</div>
                     <div class="result-row"><span class="result-label">Service Type</span><span class="result-value" id="resBedService">-</span></div>
@@ -644,10 +809,23 @@
 </div>
 
 <script>
-    // ===== CONSTANTS =====
-    const MINIMUM_CHARGE_STANDON = 45, MINIMUM_CHARGE_PUSH = 60, HOURLY_RATE = 158, FIXED_TRIM_TIME = 20;
+    // ===== PRICING CONSTANTS =====
+    const PEAK_HOURLY_RATE        = 158;
+    const OFFPEAK_HOURLY_RATE     = 110;
+    const PEAK_MIN_STANDON        = 45;
+    const PEAK_MIN_PUSH           = 60;
+    const OFFPEAK_MIN_STANDON     = 45;
+    const OFFPEAK_MIN_PUSH        = 45;
+
+    // Active pricing (mutable — driven by season toggle)
+    let HOURLY_RATE               = PEAK_HOURLY_RATE;
+    let MINIMUM_CHARGE_STANDON    = PEAK_MIN_STANDON;
+    let MINIMUM_CHARGE_PUSH       = PEAK_MIN_PUSH;
+    let isOffPeak                 = false;
+
+    const FIXED_TRIM_TIME = 20;
     const STANDON_SQFT_PER_HOUR = 3 * 4 * 5280 * 0.80;
-    const PUSH_SQFT_PER_HOUR = 1.833 * 2 * 5280 * 0.80;
+    const PUSH_SQFT_PER_HOUR    = 1.833 * 2 * 5280 * 0.80;
     const DIFFICULTY_MULTIPLIERS = {
         standard: { multiplier: 1.0, rate: 0.0018 },
         sloped:   { multiplier: 1.25, rate: 0.0023 },
@@ -668,12 +846,56 @@
         tall:   [{v:'5.00',l:'$5.00/ft — Tall, Basic Ladder'},{v:'6.25',l:'$6.25/ft — Tall, Standard Ladder'},{v:'7.50',l:'$7.50/ft — Tall, Reach Pole / Spotter Required'}]
     };
 
-    let map, drawingManager, autocomplete, marker;
-    let polygons = [], totalArea = 0, propertyAddress = '', customerName = '', mapSnapshot = null;
-    let linearPolylines = [], linearMeasurements = [], totalLinearFt = 0;
-    let isLinearMode = false, linearClickListener = null, previewLine = null, currentLinearPoints = [], linearLabels = [];
-    // Manual time state
-    let isManualTimeMode = false, manualTimeMins = 0;
+    // ===== SEASON MODE =====
+    function applySeasonMode() {
+        isOffPeak = document.getElementById('seasonToggleInput').checked;
+        const bar   = document.getElementById('seasonToggleBar');
+        const icon  = document.getElementById('seasonIcon');
+        const name  = document.getElementById('seasonName');
+        const desc  = document.getElementById('seasonDesc');
+        const labelPeak    = document.getElementById('labelPeak');
+        const labelOffpeak = document.getElementById('labelOffpeak');
+        const rateChip     = document.getElementById('seasonRateChip');
+        const minSChip     = document.getElementById('seasonMinStandonChip');
+        const minPChip     = document.getElementById('seasonMinPushChip');
+        const rateNote     = document.getElementById('activeRateNote');
+
+        if (isOffPeak) {
+            HOURLY_RATE            = OFFPEAK_HOURLY_RATE;
+            MINIMUM_CHARGE_STANDON = OFFPEAK_MIN_STANDON;
+            MINIMUM_CHARGE_PUSH    = OFFPEAK_MIN_PUSH;
+
+            bar.classList.remove('peak');
+            bar.classList.add('offpeak');
+            icon.textContent  = '❄️';
+            name.textContent  = 'Off-Peak Pricing';
+            desc.textContent  = 'Low demand · Competitive rates active';
+            labelPeak.classList.remove('active-label');
+            labelOffpeak.classList.add('active-label');
+            rateChip.textContent  = '$110/hr';
+            minSChip.textContent  = '$45';
+            minPChip.textContent  = '$45';
+            rateNote.textContent  = '❄️ Off-Peak: $110/hr · Stand-On min $45 · Push min $45';
+        } else {
+            HOURLY_RATE            = PEAK_HOURLY_RATE;
+            MINIMUM_CHARGE_STANDON = PEAK_MIN_STANDON;
+            MINIMUM_CHARGE_PUSH    = PEAK_MIN_PUSH;
+
+            bar.classList.remove('offpeak');
+            bar.classList.add('peak');
+            icon.textContent  = '☀️';
+            name.textContent  = 'Peak Season Pricing';
+            desc.textContent  = 'High demand · Full rates apply';
+            labelPeak.classList.add('active-label');
+            labelOffpeak.classList.remove('active-label');
+            rateChip.textContent  = '$158/hr';
+            minSChip.textContent  = '$45';
+            minPChip.textContent  = '$60';
+            rateNote.textContent  = '☀️ Peak: $158/hr · Stand-On min $45 · Push min $60';
+        }
+
+        recalcCrewTime();
+    }
 
     // ===== CALCULATIONS =====
     function calculateMowing(area, svcType, difficulty) {
@@ -689,7 +911,6 @@
         return { price: finalPrice, bMins };
     }
 
-    // Calculate mowing from manual time entry
     function calculateMowingFromTime(timeMins, svcType, difficulty) {
         const diff = DIFFICULTY_MULTIPLIERS[difficulty];
         const minCharge = svcType === 'standard' ? MINIMUM_CHARGE_STANDON : MINIMUM_CHARGE_PUSH;
@@ -702,86 +923,60 @@
     }
 
     // ===== CREW SIZE HELPERS =====
-    function getCrewSize() {
-        return parseInt(document.getElementById('crewSize').value) || 1;
-    }
-
-    function calcOnsiteTime(bMins, crewSize) {
-        return Math.ceil(bMins / crewSize);
-    }
-
+    function getCrewSize() { return parseInt(document.getElementById('crewSize').value) || 1; }
+    function calcOnsiteTime(bMins, crewSize) { return Math.ceil(bMins / crewSize); }
     function formatMins(mins) {
         if (mins < 60) return mins + ' min';
-        const h = Math.floor(mins / 60);
-        const m = mins % 60;
+        const h = Math.floor(mins / 60), m = mins % 60;
         return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
     }
 
-    // Live crew time preview in Step 3 header
     function recalcCrewTime() {
-        const svc = document.getElementById('serviceType').value;
+        const svc  = document.getElementById('serviceType').value;
         const diff = document.getElementById('difficultyLevel').value;
         const crew = getCrewSize();
         const preview = document.getElementById('crewTimePreview');
         const splitHedge = document.getElementById('splitHedgeTime').checked;
-        const splitBed = document.getElementById('splitBedTime').checked;
-        const inclBedCheck = document.getElementById('includeBed').checked;
+        const splitBed   = document.getElementById('splitBedTime').checked;
+        const inclBedCheck   = document.getElementById('includeBed').checked;
         const inclHedgeCheck = document.getElementById('includeHedge').checked;
 
         let mowBudg = 0, mowOnsite = 0;
         if (isManualTimeMode && manualTimeMins > 0 && diff) {
             const result = calculateMowingFromTime(manualTimeMins, svc || 'standard', diff);
-            mowBudg = result.bMins;
-            mowOnsite = calcOnsiteTime(mowBudg, crew);
+            mowBudg = result.bMins; mowOnsite = calcOnsiteTime(mowBudg, crew);
         } else if (svc && diff && totalArea > 0) {
             const result = calculateMowing(totalArea, svc, diff);
-            mowBudg = result.bMins;
-            mowOnsite = calcOnsiteTime(mowBudg, crew);
+            mowBudg = result.bMins; mowOnsite = calcOnsiteTime(mowBudg, crew);
         }
 
         let bedBudg = 0, bedOnsite = 0;
-        if (inclBedCheck) {
-            try {
-                const bed = calculateBed();
-                bedBudg = Math.round((bed.total / HOURLY_RATE) * 60);
-                bedOnsite = splitBed ? calcOnsiteTime(bedBudg, crew) : bedBudg;
-            } catch(e) {}
-        }
+        if (inclBedCheck) { try { const bed = calculateBed(); bedBudg = Math.round((bed.total / PEAK_HOURLY_RATE) * 60); bedOnsite = splitBed ? calcOnsiteTime(bedBudg, crew) : bedBudg; } catch(e) {} }
 
         let hedgeBudg = 0, hedgeOnsite = 0;
-        if (inclHedgeCheck) {
-            try {
-                const hedge = calculateHedge();
-                hedgeBudg = Math.round((hedge.total / HOURLY_RATE) * 60);
-                hedgeOnsite = splitHedge ? calcOnsiteTime(hedgeBudg, crew) : hedgeBudg;
-            } catch(e) {}
-        }
+        if (inclHedgeCheck) { try { const hedge = calculateHedge(); hedgeBudg = Math.round((hedge.total / PEAK_HOURLY_RATE) * 60); hedgeOnsite = splitHedge ? calcOnsiteTime(hedgeBudg, crew) : hedgeBudg; } catch(e) {} }
 
-        if (mowOnsite === 0 && bedOnsite === 0 && hedgeOnsite === 0) {
-            preview.textContent = '— add measurements and services to preview';
-            return;
-        }
-
+        if (mowOnsite === 0 && bedOnsite === 0 && hedgeOnsite === 0) { preview.textContent = '— add measurements and services to preview'; return; }
         const parallelOnsite = Math.max(mowOnsite, hedgeOnsite);
         const totalOnsite = parallelOnsite + bedOnsite;
-
         let parts = [];
-        if (mowBudg > 0) parts.push(`Mow: ${formatMins(mowOnsite)}`);
+        if (mowBudg > 0)   parts.push(`Mow: ${formatMins(mowOnsite)}`);
         if (hedgeBudg > 0) parts.push(`Hedges: ${formatMins(hedgeOnsite)}`);
-        if (bedBudg > 0) parts.push(`Beds: ${formatMins(bedOnsite)}`);
-        const detail = parts.join(' · ');
-        preview.textContent = `Total stop: ${formatMins(totalOnsite)} (${crew}-person crew)${detail ? ' — ' + detail : ''}`;
+        if (bedBudg > 0)   parts.push(`Beds: ${formatMins(bedOnsite)}`);
+        preview.textContent = `Total stop: ${formatMins(totalOnsite)} (${crew}-person crew)${parts.length ? ' — ' + parts.join(' · ') : ''}`;
     }
 
     // ===== MANUAL TIME MODE =====
+    let isManualTimeMode = false, manualTimeMins = 0;
+    let map, drawingManager, autocomplete, marker;
+    let polygons = [], totalArea = 0, propertyAddress = '', customerName = '', mapSnapshot = null;
+    let linearPolylines = [], linearMeasurements = [], totalLinearFt = 0;
+    let isLinearMode = false, linearLabels = [];
+
     function toggleManualTime() {
         const checked = document.getElementById('manualTimeToggle').checked;
-        const section = document.getElementById('manualTimeSection');
-        section.classList.toggle('visible', checked);
-        if (!checked) {
-            isManualTimeMode = false;
-            manualTimeMins = 0;
-        }
+        document.getElementById('manualTimeSection').classList.toggle('visible', checked);
+        if (!checked) { isManualTimeMode = false; manualTimeMins = 0; }
     }
 
     function updateManualTimeDisplay() {
@@ -791,17 +986,14 @@
             const hrs = (mins / 60).toFixed(2);
             const basePrice = (mins / 60) * HOURLY_RATE;
             preview.classList.remove('hidden');
-            preview.innerHTML = `${mins} min = ${hrs} hrs &nbsp;·&nbsp; Base price (standard): ~$${basePrice.toFixed(2)} before difficulty`;
-        } else {
-            preview.classList.add('hidden');
-        }
+            preview.innerHTML = `${mins} min = ${hrs} hrs &nbsp;·&nbsp; Base price (standard, active rate $${HOURLY_RATE}/hr): ~$${basePrice.toFixed(2)} before difficulty`;
+        } else { preview.classList.add('hidden'); }
     }
 
     function applyManualTimeToStep3() {
         const mins = parseInt(document.getElementById('manualTimeMins').value) || 0;
         if (mins < 1) { alert('Please enter estimated mow time in minutes'); return; }
-        isManualTimeMode = true;
-        manualTimeMins = mins;
+        isManualTimeMode = true; manualTimeMins = mins;
         document.getElementById('step3').classList.remove('hidden');
         document.getElementById('step3').scrollIntoView({ behavior: 'smooth', block: 'start' });
         recalcCrewTime();
@@ -815,24 +1007,14 @@
         const disposalVal = document.getElementById('bedDisposal').value;
         const rates = BED_RATES[st];
         let measurement = 0, measureLabel = '';
-        if (method === 'sqft') {
-            measurement = parseFloat(document.getElementById('bedSqFt').value) || 0;
-            measureLabel = measurement + ' sq ft';
-        } else {
-            measurement = parseFloat(document.getElementById('bedLinearFt').value) || 0;
-            measureLabel = measurement + ' linear ft';
-        }
+        if (method === 'sqft') { measurement = parseFloat(document.getElementById('bedSqFt').value) || 0; measureLabel = measurement + ' sq ft'; }
+        else { measurement = parseFloat(document.getElementById('bedLinearFt').value) || 0; measureLabel = measurement + ' linear ft'; }
         const rate = method === 'sqft' ? rates.sqft : rates.linear;
         const basePrice = measurement * rate;
         const surcharge = firstCut ? basePrice * 0.5 : 0;
         let disposalCost = 0, disposalLabel = 'Included / N/A';
-        if (disposalVal === 'bag') {
-            const bags = parseInt(document.getElementById('bedBagCount').value) || 1;
-            disposalCost = bags * 5;
-            disposalLabel = `$${disposalCost.toFixed(2)} (${bags} bag${bags > 1 ? 's' : ''} × $5)`;
-        } else if (disposalVal === '35') {
-            disposalCost = 35; disposalLabel = '$35.00 (haul away)';
-        }
+        if (disposalVal === 'bag') { const bags = parseInt(document.getElementById('bedBagCount').value) || 1; disposalCost = bags * 5; disposalLabel = `$${disposalCost.toFixed(2)} (${bags} bag${bags > 1 ? 's' : ''} × $5)`; }
+        else if (disposalVal === '35') { disposalCost = 35; disposalLabel = '$35.00 (haul away)'; }
         return { serviceLabel: rates.label, measureLabel, basePrice, surcharge, firstCut, materialFee, disposalLabel, disposalCost, total: basePrice + surcharge + materialFee + disposalCost };
     }
 
@@ -861,30 +1043,25 @@
         if (checkbox) checkbox.checked = isActive;
         recalcCrewTime();
     }
-
     function toggleMowingSection() {
         const checked = document.getElementById('includeMowing').checked;
         const panel = document.getElementById('mowingPanel');
         panel.style.display = checked ? 'block' : 'none';
         panel.classList.toggle('active', checked);
     }
-
     function toggleBedPricingMethod() {
         const m = document.getElementById('bedPricingMethod').value;
         document.getElementById('bedSqftGroup').style.display = m === 'sqft' ? 'block' : 'none';
         document.getElementById('bedLinearGroup').style.display = m === 'linear' ? 'block' : 'none';
     }
-
     function toggleBagCount() {
         document.getElementById('bedBagGroup').style.display = document.getElementById('bedDisposal').value === 'bag' ? 'block' : 'none';
     }
-
     function updateBedRate() {
         const st = document.getElementById('bedServiceType').value;
         const r = BED_RATES[st];
         document.getElementById('bedRateText').textContent = `${r.label} — $${r.sqft}/sqft or $${r.linear}/linear ft`;
     }
-
     function updateHedgeRate() {
         const cat = document.getElementById('hedgeCategory').value;
         document.getElementById('hedgeRate').innerHTML = HEDGE_RATE_OPTIONS[cat].map(o => `<option value="${o.v}">${o.l}</option>`).join('');
@@ -896,52 +1073,33 @@
         document.getElementById('polygonModeBtn').classList.toggle('active', !isLinearMode);
         document.getElementById('linearModeBtn').classList.toggle('active', isLinearMode);
         if (!drawingManager) return;
-        if (isLinearMode) {
-            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
-        } else {
-            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
-        }
+        drawingManager.setDrawingMode(isLinearMode ? google.maps.drawing.OverlayType.POLYLINE : google.maps.drawing.OverlayType.POLYGON);
     }
-
     function computePolylineFt(points) {
         let meters = 0;
-        for (let i = 1; i < points.length; i++) {
-            meters += google.maps.geometry.spherical.computeDistanceBetween(points[i-1], points[i]);
-        }
+        for (let i = 1; i < points.length; i++) meters += google.maps.geometry.spherical.computeDistanceBetween(points[i-1], points[i]);
         return meters * 3.28084;
     }
-
     function updateLinearPanel() {
         totalLinearFt = linearMeasurements.reduce((a, b) => a + b, 0);
         document.getElementById('totalLinearFt').textContent = Math.round(totalLinearFt);
         document.getElementById('totalLinearDisplay').textContent = Math.round(totalLinearFt) + ' linear ft';
         let html = '';
-        linearMeasurements.forEach((ft, i) => {
-            html += `<div class="linear-measure-item">
-                <span class="font-medium text-amber-800">Segment ${i+1}</span>
-                <span class="font-bold text-amber-900">${Math.round(ft)} linear ft</span>
-            </div>`;
-        });
+        linearMeasurements.forEach((ft, i) => { html += `<div class="linear-measure-item"><span class="font-medium text-amber-800">Segment ${i+1}</span><span class="font-bold text-amber-900">${Math.round(ft)} linear ft</span></div>`; });
         document.getElementById('linearList').innerHTML = html || '<p class="text-amber-700 text-xs">No segments yet</p>';
         const panel = document.getElementById('linearPanel');
         panel.style.display = linearMeasurements.length > 0 ? 'block' : 'none';
         if (linearMeasurements.length > 0) document.getElementById('step3').classList.remove('hidden');
         else if (polygons.length === 0 && !isManualTimeMode) document.getElementById('step3').classList.add('hidden');
     }
-
     function clearLinearMeasurements() {
-        linearPolylines.forEach(p => p.setMap(null));
-        linearPolylines = [];
-        linearMeasurements = [];
-        totalLinearFt = 0;
-        linearLabels.forEach(l => l.close());
-        linearLabels = [];
+        linearPolylines.forEach(p => p.setMap(null)); linearPolylines = []; linearMeasurements = []; totalLinearFt = 0;
+        linearLabels.forEach(l => l.close()); linearLabels = [];
         document.getElementById('linearPanel').style.display = 'none';
         document.getElementById('totalLinearDisplay').textContent = '0 linear ft';
         if (polygons.length === 0 && !isManualTimeMode) document.getElementById('step3').classList.add('hidden');
         if (drawingManager && isLinearMode) drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
     }
-
     function clearAll() {
         polygons.forEach(p => p.setMap(null)); polygons = []; totalArea = 0;
         document.getElementById('totalArea').textContent = '0 sq ft';
@@ -956,13 +1114,12 @@
     // ===== CALCULATE BUTTON =====
     document.getElementById('calculateBtn').addEventListener('click', () => {
         const firstName = document.getElementById('customerFirstName').value.trim();
-        const lastName = document.getElementById('customerLastName').value.trim();
+        const lastName  = document.getElementById('customerLastName').value.trim();
         if (!firstName || !lastName) { alert('Please enter customer name'); return; }
-        const inclMow = document.getElementById('includeMowing').checked;
-        const inclBed = document.getElementById('includeBed').checked;
+        const inclMow   = document.getElementById('includeMowing').checked;
+        const inclBed   = document.getElementById('includeBed').checked;
         const inclHedge = document.getElementById('includeHedge').checked;
         if (!inclMow && !inclBed && !inclHedge) { alert('Please select at least one service'); return; }
-
         if (inclMow) {
             const svc = document.getElementById('serviceType').value;
             if (!svc) { alert('Please select a mowing service type'); return; }
@@ -973,52 +1130,60 @@
         customerName = `${firstName} ${lastName}`;
         document.getElementById('resultCustomerName').textContent = customerName;
         document.getElementById('resultAddress').textContent = propertyAddress || 'Not entered';
+
+        // Season badge in results
+        const badge = document.getElementById('seasonResultBadge');
+        if (isOffPeak) {
+            badge.className = 'season-result-badge offpeak';
+            badge.textContent = '❄️ Off-Peak Pricing ($110/hr)';
+        } else {
+            badge.className = 'season-result-badge peak';
+            badge.textContent = '☀️ Peak Pricing ($158/hr)';
+        }
+
         let grandTotal = 0;
         const crew = getCrewSize();
         const crewLabel = crew === 1 ? '1 Person (Solo)' : `${crew}-Person Crew`;
+        const pricingModeLabel = isOffPeak ? `❄️ Off-Peak ($${HOURLY_RATE}/hr)` : `☀️ Peak ($${HOURLY_RATE}/hr)`;
 
         // Mowing
         if (inclMow) {
-            const svc = document.getElementById('serviceType').value;
+            const svc  = document.getElementById('serviceType').value;
             const diff = document.getElementById('difficultyLevel').value;
             const freq = document.getElementById('frequency').value;
-
             let mow, areaLabel;
             if (isManualTimeMode) {
                 mow = calculateMowingFromTime(manualTimeMins, svc, diff);
                 const reasonEl = document.getElementById('manualTimeReason');
-                const reasonText = reasonEl.options[reasonEl.selectedIndex].text;
-                areaLabel = `Est. (manual) — ${reasonText}`;
+                areaLabel = `Est. (manual) — ${reasonEl.options[reasonEl.selectedIndex].text}`;
             } else {
                 mow = calculateMowing(totalArea, svc, diff);
                 areaLabel = totalArea.toLocaleString() + ' sq ft';
             }
-
             const onsiteMins = calcOnsiteTime(mow.bMins, crew);
-            const svcNames = {standard:'Stand-On Mowing', push:'Push Mowing - Bagged'};
+            const svcNames  = {standard:'Stand-On Mowing', push:'Push Mowing - Bagged'};
             const diffNames = {standard:'Standard (Flat)', sloped:'Sloped/Hilly', extreme:'Extreme/Obstacles'};
             const freqNames = {onetime:'One-time', weekly:'Weekly', biweekly:'Bi-weekly', monthly:'Monthly'};
-
-            document.getElementById('resMowArea').textContent = areaLabel;
-            document.getElementById('resMowService').textContent = svcNames[svc];
-            document.getElementById('resMowDifficulty').textContent = diffNames[diff];
+            document.getElementById('resMowArea').textContent      = areaLabel;
+            document.getElementById('resMowService').textContent   = svcNames[svc];
+            document.getElementById('resMowDifficulty').textContent= diffNames[diff];
             document.getElementById('resMowFrequency').textContent = freqNames[freq];
-            document.getElementById('resMowBHrs').textContent = formatMins(mow.bMins);
-            document.getElementById('resMowCrew').textContent = crewLabel;
-            document.getElementById('resMowOnsite').textContent = formatMins(onsiteMins);
-            document.getElementById('resMowPrice').textContent = '$' + mow.price.toFixed(2);
+            document.getElementById('resMowBHrs').textContent      = formatMins(mow.bMins);
+            document.getElementById('resMowCrew').textContent      = crewLabel;
+            document.getElementById('resMowOnsite').textContent    = formatMins(onsiteMins);
+            document.getElementById('resMowPricingMode').textContent = pricingModeLabel;
+            document.getElementById('resMowPrice').textContent     = '$' + mow.price.toFixed(2);
             document.getElementById('mowingResults').style.display = 'block';
             grandTotal += mow.price;
-
-            document.getElementById('resBudgetedTime').textContent = formatMins(mow.bMins);
-            document.getElementById('resMowOnsiteTime').textContent = formatMins(onsiteMins);
-            document.getElementById('tbbMowRow').style.display = 'flex';
+            document.getElementById('resBudgetedTime').textContent   = formatMins(mow.bMins);
+            document.getElementById('resMowOnsiteTime').textContent  = formatMins(onsiteMins);
+            document.getElementById('tbbMowRow').style.display       = 'flex';
             document.getElementById('tbbMowOnsiteRow').style.display = crew > 1 ? 'flex' : 'none';
-            document.getElementById('timeBreakdownBox').style.display = 'block';
-            document.getElementById('manualTimeNotice').style.display = isManualTimeMode ? 'block' : 'none';
+            document.getElementById('timeBreakdownBox').style.display= 'block';
+            document.getElementById('manualTimeNotice').style.display= isManualTimeMode ? 'block' : 'none';
         } else {
-            document.getElementById('mowingResults').style.display = 'none';
-            document.getElementById('tbbMowRow').style.display = 'none';
+            document.getElementById('mowingResults').style.display   = 'none';
+            document.getElementById('tbbMowRow').style.display       = 'none';
             document.getElementById('tbbMowOnsiteRow').style.display = 'none';
         }
 
@@ -1026,32 +1191,28 @@
         let bedBudgMins = 0;
         if (inclBed) {
             const bed = calculateBed();
-            bedBudgMins = Math.round((bed.total / HOURLY_RATE) * 60);
+            bedBudgMins = Math.round((bed.total / PEAK_HOURLY_RATE) * 60); // Beds always target $158/hr — not affected by season toggle
             const splitBed = document.getElementById('splitBedTime').checked;
             const bedOnsiteMins = splitBed ? calcOnsiteTime(bedBudgMins, crew) : bedBudgMins;
-
-            document.getElementById('resBedService').textContent = bed.serviceLabel;
-            document.getElementById('resBedArea').textContent = bed.measureLabel;
-            document.getElementById('resBedBase').textContent = '$' + bed.basePrice.toFixed(2);
-            if (bed.firstCut) {
-                document.getElementById('resBedFirstCutRow').style.display = 'flex';
-                document.getElementById('resBedFirstCut').textContent = '+$' + bed.surcharge.toFixed(2);
-            } else { document.getElementById('resBedFirstCutRow').style.display = 'none'; }
+            document.getElementById('resBedService').textContent  = bed.serviceLabel;
+            document.getElementById('resBedArea').textContent     = bed.measureLabel;
+            document.getElementById('resBedBase').textContent     = '$' + bed.basePrice.toFixed(2);
+            if (bed.firstCut) { document.getElementById('resBedFirstCutRow').style.display = 'flex'; document.getElementById('resBedFirstCut').textContent = '+$' + bed.surcharge.toFixed(2); }
+            else { document.getElementById('resBedFirstCutRow').style.display = 'none'; }
             document.getElementById('resBedMaterial').textContent = bed.materialFee > 0 ? '+$' + bed.materialFee.toFixed(2) : '$0.00';
             document.getElementById('resBedDisposal').textContent = bed.disposalLabel;
-            document.getElementById('resBedTotal').textContent = '$' + bed.total.toFixed(2);
-            document.getElementById('resBedTime').textContent = formatMins(bedBudgMins) + (splitBed && crew > 1 ? ` → ${formatMins(bedOnsiteMins)} w/ crew` : ' (solo)');
-            document.getElementById('bedResults').style.display = 'block';
+            document.getElementById('resBedTotal').textContent    = '$' + bed.total.toFixed(2);
+            document.getElementById('resBedTime').textContent     = formatMins(bedBudgMins) + (splitBed && crew > 1 ? ` → ${formatMins(bedOnsiteMins)} w/ crew` : ' (solo)');
+            document.getElementById('bedResults').style.display   = 'block';
             grandTotal += bed.total;
-
-            document.getElementById('resBedBudgTime').textContent = formatMins(bedBudgMins);
-            document.getElementById('resBedOnsiteTime').textContent = formatMins(bedOnsiteMins);
+            document.getElementById('resBedBudgTime').textContent    = formatMins(bedBudgMins);
+            document.getElementById('resBedOnsiteTime').textContent  = formatMins(bedOnsiteMins);
             document.getElementById('tbbBedOnsiteLabel').textContent = splitBed && crew > 1 ? '↳ on-site w/ crew (split)' : '↳ on-site (solo — beds)';
-            document.getElementById('tbbBedRow').style.display = 'flex';
+            document.getElementById('tbbBedRow').style.display       = 'flex';
             document.getElementById('tbbBedOnsiteRow').style.display = 'flex';
         } else {
-            document.getElementById('bedResults').style.display = 'none';
-            document.getElementById('tbbBedRow').style.display = 'none';
+            document.getElementById('bedResults').style.display   = 'none';
+            document.getElementById('tbbBedRow').style.display    = 'none';
             document.getElementById('tbbBedOnsiteRow').style.display = 'none';
         }
 
@@ -1059,62 +1220,58 @@
         let hedgeBudgMins = 0;
         if (inclHedge) {
             const hedge = calculateHedge();
-            hedgeBudgMins = Math.round((hedge.total / HOURLY_RATE) * 60);
+            hedgeBudgMins = Math.round((hedge.total / PEAK_HOURLY_RATE) * 60); // Hedges always target $158/hr — not affected by season toggle
             const splitHedge = document.getElementById('splitHedgeTime').checked;
             const hedgeOnsiteMins = splitHedge ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins;
-
             document.getElementById('resHedgeCategory').textContent = hedge.categoryLabel;
-            document.getElementById('resHedgeFt').textContent = hedge.linearFt + ' linear ft';
-            document.getElementById('resHedgeRate').textContent = '$' + hedge.rate.toFixed(2) + '/ft';
-            document.getElementById('resHedgeDepth').textContent = hedge.depthLabel;
-            document.getElementById('resHedgeBase').textContent = '$' + hedge.basePrice.toFixed(2);
-            if (hedge.firstCut) {
-                document.getElementById('resHedgeFirstCutRow').style.display = 'flex';
-                document.getElementById('resHedgeFirstCut').textContent = '+$' + hedge.surcharge.toFixed(2);
-            } else { document.getElementById('resHedgeFirstCutRow').style.display = 'none'; }
+            document.getElementById('resHedgeFt').textContent       = hedge.linearFt + ' linear ft';
+            document.getElementById('resHedgeRate').textContent     = '$' + hedge.rate.toFixed(2) + '/ft';
+            document.getElementById('resHedgeDepth').textContent    = hedge.depthLabel;
+            document.getElementById('resHedgeBase').textContent     = '$' + hedge.basePrice.toFixed(2);
+            if (hedge.firstCut) { document.getElementById('resHedgeFirstCutRow').style.display = 'flex'; document.getElementById('resHedgeFirstCut').textContent = '+$' + hedge.surcharge.toFixed(2); }
+            else { document.getElementById('resHedgeFirstCutRow').style.display = 'none'; }
             document.getElementById('resHedgeDisposal').textContent = hedge.disposalLabel;
-            document.getElementById('resHedgeTotal').textContent = '$' + hedge.total.toFixed(2);
-            document.getElementById('resHedgeTime').textContent = formatMins(hedgeBudgMins) + (splitHedge && crew > 1 ? ` → ${formatMins(hedgeOnsiteMins)} w/ crew` : ' (solo)');
-            document.getElementById('hedgeResults').style.display = 'block';
+            document.getElementById('resHedgeTotal').textContent    = '$' + hedge.total.toFixed(2);
+            document.getElementById('resHedgeTime').textContent     = formatMins(hedgeBudgMins) + (splitHedge && crew > 1 ? ` → ${formatMins(hedgeOnsiteMins)} w/ crew` : ' (solo)');
+            document.getElementById('hedgeResults').style.display   = 'block';
             grandTotal += hedge.total;
-
-            document.getElementById('resHedgeBudgTime').textContent = formatMins(hedgeBudgMins);
+            document.getElementById('resHedgeBudgTime').textContent   = formatMins(hedgeBudgMins);
             document.getElementById('resHedgeOnsiteTime').textContent = formatMins(hedgeOnsiteMins);
-            document.getElementById('tbbHedgeRow').style.display = 'flex';
-            document.getElementById('tbbHedgeOnsiteRow').style.display = crew > 1 ? 'flex' : 'none';
+            document.getElementById('tbbHedgeRow').style.display      = 'flex';
+            document.getElementById('tbbHedgeOnsiteRow').style.display= crew > 1 ? 'flex' : 'none';
         } else {
-            document.getElementById('hedgeResults').style.display = 'none';
-            document.getElementById('tbbHedgeRow').style.display = 'none';
+            document.getElementById('hedgeResults').style.display    = 'none';
+            document.getElementById('tbbHedgeRow').style.display     = 'none';
             document.getElementById('tbbHedgeOnsiteRow').style.display = 'none';
         }
 
-        // Total on-site time
-        const mowOnsite = inclMow ? calcOnsiteTime(
-            isManualTimeMode ? Math.ceil(manualTimeMins * DIFFICULTY_MULTIPLIERS[document.getElementById('difficultyLevel').value].multiplier) :
-            calculateMowing(totalArea, document.getElementById('serviceType').value, document.getElementById('difficultyLevel').value).bMins, crew) : 0;
-        const splitHedgeFinal = document.getElementById('splitHedgeTime').checked;
-        const splitBedFinal = document.getElementById('splitBedTime').checked;
-        const hedgeOnsite = inclHedge ? (splitHedgeFinal ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins) : 0;
-        const bedOnsite = inclBed ? (splitBedFinal ? calcOnsiteTime(bedBudgMins, crew) : bedBudgMins) : 0;
-        const parallelOnsite = Math.max(mowOnsite, hedgeOnsite);
-        const totalOnsiteMins = parallelOnsite + bedOnsite;
+        // Total on-site
+        const mowBMinsForTotal = inclMow ? (isManualTimeMode
+            ? Math.ceil(manualTimeMins * DIFFICULTY_MULTIPLIERS[document.getElementById('difficultyLevel').value].multiplier * (document.getElementById('serviceType').value === 'push' ? 2.5 : 1.0))
+            : calculateMowing(totalArea, document.getElementById('serviceType').value, document.getElementById('difficultyLevel').value).bMins) : 0;
+        const mowOnsite   = inclMow ? calcOnsiteTime(mowBMinsForTotal, crew) : 0;
+        const splitHedgeF = document.getElementById('splitHedgeTime').checked;
+        const splitBedF   = document.getElementById('splitBedTime').checked;
+        const hedgeOnsite = inclHedge ? (splitHedgeF ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins) : 0;
+        const bedOnsite   = inclBed   ? (splitBedF   ? calcOnsiteTime(bedBudgMins, crew)   : bedBudgMins)   : 0;
+        const totalOnsiteMins = Math.max(mowOnsite, hedgeOnsite) + bedOnsite;
 
-        document.getElementById('resCrewSize').textContent = crewLabel;
-        document.getElementById('resOnsiteTime').textContent = formatMins(totalOnsiteMins);
+        document.getElementById('resCrewSize').textContent  = crewLabel;
+        document.getElementById('resOnsiteTime').textContent= formatMins(totalOnsiteMins);
         document.getElementById('timeBreakdownBox').style.display = 'block';
-
         document.getElementById('resGrandTotal').textContent = '$' + grandTotal.toFixed(2);
         captureMapSnapshot();
         document.getElementById('resultsModal').classList.add('active');
     });
 
-    // ===== PDF =====
+    // ===== PDF (Staff) =====
     document.getElementById('pdfBtn').addEventListener('click', () => {
-        const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+        const dateStr    = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
         const grandTotal = document.getElementById('resGrandTotal').textContent;
-        const inclMow = document.getElementById('mowingResults').style.display !== 'none';
-        const inclBed = document.getElementById('bedResults').style.display !== 'none';
-        const inclHedge = document.getElementById('hedgeResults').style.display !== 'none';
+        const inclMow    = document.getElementById('mowingResults').style.display !== 'none';
+        const inclBed    = document.getElementById('bedResults').style.display !== 'none';
+        const inclHedge  = document.getElementById('hedgeResults').style.display !== 'none';
+        const pricingMode = isOffPeak ? `❄️ Off-Peak Pricing — $${HOURLY_RATE}/hr` : `☀️ Peak Pricing — $${HOURLY_RATE}/hr`;
 
         let mowSec = '', bedSec = '', hedgeSec = '';
         if (inclMow) {
@@ -1125,7 +1282,8 @@
                 <div class="pdf-info-item"><div class="pdf-info-label">Frequency</div><div class="pdf-info-value">${document.getElementById('resMowFrequency').textContent}</div></div>
                 <div class="pdf-info-item"><div class="pdf-info-label">Budgeted Time (Solo)</div><div class="pdf-info-value">${document.getElementById('resMowBHrs').textContent}</div></div>
                 <div class="pdf-info-item"><div class="pdf-info-label">Crew Size</div><div class="pdf-info-value">${document.getElementById('resMowCrew').textContent}</div></div>
-                <div class="pdf-info-item highlight"><div class="pdf-info-label">⏰ On-Site Time</div><div class="pdf-info-value">${document.getElementById('resMowOnsite').textContent}</div></div>
+                <div class="pdf-info-item onsite-highlight"><div class="pdf-info-label">⏰ On-Site Time</div><div class="pdf-info-value">${document.getElementById('resMowOnsite').textContent}</div></div>
+                <div class="pdf-info-item"><div class="pdf-info-label">Pricing Mode</div><div class="pdf-info-value">${document.getElementById('resMowPricingMode').textContent}</div></div>
                 <div class="pdf-info-item highlight"><div class="pdf-info-label">Mowing Price</div><div class="pdf-info-value">${document.getElementById('resMowPrice').textContent}</div></div>
             </div></div>`;
         }
@@ -1168,6 +1326,9 @@
             ? `<div class="pdf-section"><div class="pdf-section-title">Property Map</div><img src="${mapSnapshot}" style="width:100%;max-height:400px;object-fit:contain;border:2px solid #21A348;border-radius:12px;margin-top:15px;"></div>`
             : `<div class="pdf-section"><div class="pdf-section-title">Property Map</div><div style="padding:40px;text-align:center;background:#f3f4f6;border:2px dashed #d1d5db;border-radius:12px;"><p style="color:#6b7280;font-size:14px;">Map image not available</p></div></div>`;
 
+        const pricingBannerColor = isOffPeak ? '#1d4ed8' : '#b45309';
+        const pricingBannerBg    = isOffPeak ? '#dbeafe' : '#fef3c7';
+
         const pw = window.open('','_blank','width=900,height=800');
         pw.document.write(`<!DOCTYPE html><html><head><title>Estimate - ${customerName}</title>
         <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:20px;background:white;}
@@ -1176,6 +1337,7 @@
         .pdf-logo{max-width:200px;margin:0 auto 15px;display:block;}
         .pdf-title{font-size:28px;font-weight:700;color:#21A348;margin-bottom:10px;}
         .pdf-subtitle{font-size:14px;color:#6b7280;}
+        .pricing-banner{background:${pricingBannerBg};border:1.5px solid ${pricingBannerColor};border-radius:8px;padding:8px 14px;margin-bottom:20px;font-size:13px;font-weight:700;color:${pricingBannerColor};text-align:center;}
         .pdf-section{margin-bottom:25px;page-break-inside:avoid;}
         .pdf-section-title{font-size:17px;font-weight:700;color:#374151;margin-bottom:12px;border-left:4px solid #21A348;padding-left:12px;}
         .pdf-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -1197,6 +1359,7 @@
             <div class="pdf-title">Property Estimate Report</div>
             <div class="pdf-subtitle">Generated: ${dateStr}</div>
         </div>
+        <div class="pricing-banner">${pricingMode}</div>
         <div class="pdf-section"><div class="pdf-section-title">Customer Information</div>
         <div class="pdf-info-grid">
             <div class="pdf-info-item"><div class="pdf-info-label">Customer Name</div><div class="pdf-info-value">${customerName}</div></div>
@@ -1218,75 +1381,51 @@
 
     // ===== CUSTOMER PDF =====
     document.getElementById('pdfCustomerBtn').addEventListener('click', () => {
-        const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+        const dateStr    = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
         const grandTotal = document.getElementById('resGrandTotal').textContent;
-        const inclMow = document.getElementById('mowingResults').style.display !== 'none';
-        const inclBed = document.getElementById('bedResults').style.display !== 'none';
-        const inclHedge = document.getElementById('hedgeResults').style.display !== 'none';
-
-        // Service type labels — cleaned for customer
+        const inclMow    = document.getElementById('mowingResults').style.display !== 'none';
+        const inclBed    = document.getElementById('bedResults').style.display !== 'none';
+        const inclHedge  = document.getElementById('hedgeResults').style.display !== 'none';
         const svcTypeRaw = document.getElementById('resMowService').textContent;
-        const freqRaw = document.getElementById('resMowFrequency').textContent;
+        const freqRaw    = document.getElementById('resMowFrequency').textContent;
 
         let mowSec = '', bedSec = '', hedgeSec = '';
-
         if (inclMow) {
-            mowSec = `<div class="pdf-section">
-                <div class="pdf-section-title">🌿 Lawn Mowing</div>
-                <div class="pdf-info-grid">
-                    <div class="pdf-info-item"><div class="pdf-info-label">Service</div><div class="pdf-info-value">${svcTypeRaw}</div></div>
-                    <div class="pdf-info-item"><div class="pdf-info-label">Frequency</div><div class="pdf-info-value">${freqRaw}</div></div>
-                    <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resMowPrice').textContent}</div></div>
-                </div>
-                <div class="service-includes">✅ Includes: Mowing, Weed Trimming, Edging &amp; Blowing</div>
-            </div>`;
+            mowSec = `<div class="pdf-section"><div class="pdf-section-title">🌿 Lawn Mowing</div><div class="pdf-info-grid">
+                <div class="pdf-info-item"><div class="pdf-info-label">Service</div><div class="pdf-info-value">${svcTypeRaw}</div></div>
+                <div class="pdf-info-item"><div class="pdf-info-label">Frequency</div><div class="pdf-info-value">${freqRaw}</div></div>
+                <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resMowPrice').textContent}</div></div>
+            </div><div class="service-includes">✅ Includes: Mowing, Weed Trimming, Edging &amp; Blowing</div></div>`;
         }
-
         if (inclBed) {
-            // Translate internal service label to customer-friendly language
             const bedSvcRaw = document.getElementById('resBedService').textContent;
-            const bedSvcFriendly = bedSvcRaw.includes('Hybrid') ? 'Hand Weed Removal + Herbicide Treatment'
-                : bedSvcRaw.includes('Pull') ? 'Hand Weed Removal'
-                : 'Herbicide Spray Treatment';
+            const bedSvcFriendly = bedSvcRaw.includes('Hybrid') ? 'Hand Weed Removal + Herbicide Treatment' : bedSvcRaw.includes('Pull') ? 'Hand Weed Removal' : 'Herbicide Spray Treatment';
             const hasDisposal = document.getElementById('resBedDisposal').textContent !== 'Included / N/A' && document.getElementById('resBedDisposal').textContent !== '$0.00';
             const disposalRow = hasDisposal ? `<div class="pdf-info-item"><div class="pdf-info-label">Debris Removal</div><div class="pdf-info-value">${document.getElementById('resBedDisposal').textContent}</div></div>` : '';
-
-            bedSec = `<div class="pdf-section">
-                <div class="pdf-section-title">🌺 Bed Maintenance</div>
-                <div class="pdf-info-grid">
-                    <div class="pdf-info-item"><div class="pdf-info-label">Service</div><div class="pdf-info-value">${bedSvcFriendly}</div></div>
-                    ${disposalRow}
-                    <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resBedTotal').textContent}</div></div>
-                </div>
-            </div>`;
+            bedSec = `<div class="pdf-section"><div class="pdf-section-title">🌺 Bed Maintenance</div><div class="pdf-info-grid">
+                <div class="pdf-info-item"><div class="pdf-info-label">Service</div><div class="pdf-info-value">${bedSvcFriendly}</div></div>
+                ${disposalRow}
+                <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resBedTotal').textContent}</div></div>
+            </div></div>`;
         }
-
         if (inclHedge) {
-            const hedgeCat = document.getElementById('resHedgeCategory').textContent;
-            const hedgeFt = document.getElementById('resHedgeFt').textContent;
+            const hedgeCat  = document.getElementById('resHedgeCategory').textContent;
+            const hedgeFt   = document.getElementById('resHedgeFt').textContent;
             const hedgeDisp = document.getElementById('resHedgeDisposal').textContent;
             const hedgeDispRow = hedgeDisp !== 'Included in rate' ? `<div class="pdf-info-item"><div class="pdf-info-label">Clipping Disposal</div><div class="pdf-info-value">${hedgeDisp}</div></div>` : '';
-
-            hedgeSec = `<div class="pdf-section">
-                <div class="pdf-section-title">✂️ Hedge &amp; Shrub Trimming</div>
-                <div class="pdf-info-grid">
-                    <div class="pdf-info-item"><div class="pdf-info-label">Height Category</div><div class="pdf-info-value">${hedgeCat}</div></div>
-                    <div class="pdf-info-item"><div class="pdf-info-label">Linear Footage</div><div class="pdf-info-value">${hedgeFt}</div></div>
-                    ${hedgeDispRow}
-                    <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resHedgeTotal').textContent}</div></div>
-                </div>
-            </div>`;
+            hedgeSec = `<div class="pdf-section"><div class="pdf-section-title">✂️ Hedge &amp; Shrub Trimming</div><div class="pdf-info-grid">
+                <div class="pdf-info-item"><div class="pdf-info-label">Height Category</div><div class="pdf-info-value">${hedgeCat}</div></div>
+                <div class="pdf-info-item"><div class="pdf-info-label">Linear Footage</div><div class="pdf-info-value">${hedgeFt}</div></div>
+                ${hedgeDispRow}
+                <div class="pdf-info-item highlight full-width"><div class="pdf-info-label">Price</div><div class="pdf-info-value">${document.getElementById('resHedgeTotal').textContent}</div></div>
+            </div></div>`;
         }
 
-        const mapHtml = mapSnapshot
-            ? `<div class="pdf-section"><div class="pdf-section-title">Property Overview</div><img src="${mapSnapshot}" style="width:100%;max-height:380px;object-fit:contain;border:2px solid #21A348;border-radius:12px;margin-top:12px;"></div>`
-            : '';
+        const mapHtml = mapSnapshot ? `<div class="pdf-section"><div class="pdf-section-title">Property Overview</div><img src="${mapSnapshot}" style="width:100%;max-height:380px;object-fit:contain;border:2px solid #21A348;border-radius:12px;margin-top:12px;"></div>` : '';
 
         const pw = window.open('','_blank','width=900,height=800');
         pw.document.write(`<!DOCTYPE html><html><head><title>Service Estimate — ${customerName}</title>
-        <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:'Helvetica Neue',Arial,sans-serif;background:white;color:#1f2937;}
+        <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Helvetica Neue',Arial,sans-serif;background:white;color:#1f2937;}
         .pdf-page{max-width:760px;margin:0 auto;padding:48px 40px;}
         .pdf-header{text-align:center;margin-bottom:36px;padding-bottom:24px;border-bottom:3px solid #21A348;}
         .pdf-logo{max-width:180px;margin:0 auto 14px;display:block;}
@@ -1296,14 +1435,13 @@
         .customer-bar-label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
         .customer-bar-value{font-size:15px;font-weight:700;color:#111827;}
         .pdf-section{margin-bottom:22px;page-break-inside:avoid;}
-        .pdf-section-title{font-size:16px;font-weight:800;color:#111827;margin-bottom:12px;padding-left:12px;border-left:4px solid #21A348;display:flex;align-items:center;gap:6px;}
+        .pdf-section-title{font-size:16px;font-weight:800;color:#111827;margin-bottom:12px;padding-left:12px;border-left:4px solid #21A348;}
         .pdf-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
         .pdf-info-item{background:#f9fafb;padding:12px 14px;border-radius:10px;border:1px solid #e5e7eb;}
         .pdf-info-item.full-width{grid-column:1/-1;}
         .pdf-info-label{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
         .pdf-info-value{font-size:15px;font-weight:700;color:#1f2937;}
-        .highlight{background:#f0fdf4!important;border:1.5px solid #86efac!important;}
-        .highlight .pdf-info-value{color:#16a34a;font-size:20px;}
+        .highlight{background:#f0fdf4!important;border:1.5px solid #86efac!important;}.highlight .pdf-info-value{color:#16a34a;font-size:20px;}
         .service-includes{margin-top:10px;font-size:12px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:8px 12px;border:1px solid #e5e7eb;}
         .grand-box{background:linear-gradient(135deg,#14532d,#166534,#15803d);color:white;border-radius:14px;padding:22px 26px;margin:24px 0;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(22,101,52,0.25);}
         .grand-label{font-weight:700;font-size:13px;opacity:0.85;text-transform:uppercase;letter-spacing:1.5px;}
@@ -1314,37 +1452,27 @@
         .pdf-footer strong{color:#6b7280;}
         @media print{body{padding:0;}.pdf-page{padding:24px;}}@page{margin:0.5in;}
         </style></head><body><div class="pdf-page">
-
         <div class="pdf-header">
             <img src="https://04bab2c6a63da3ec5306-1c92bab3ac761f2036299816f4cab718.ssl.cf1.rackcdn.com//eaf97ab3-bb79-4ee9-8077-7feb7fb9e12c.png" alt="WS Lawn Care" class="pdf-logo" onerror="this.style.display='none'">
             <div class="pdf-title">Service Estimate</div>
             <div class="pdf-subtitle">Prepared for you on ${dateStr}</div>
         </div>
-
         <div class="customer-bar">
             <div><div class="customer-bar-label">Prepared For</div><div class="customer-bar-value">${customerName}</div></div>
             <div><div class="customer-bar-label">Property Address</div><div class="customer-bar-value">${propertyAddress || 'On file'}</div></div>
         </div>
-
         ${mowSec}${bedSec}${hedgeSec}
-
-        <div class="validity-note">
-            📋 <strong>About this estimate:</strong> Prices are based on a property assessment and are valid for 30 days. Final pricing may be adjusted following an on-site visit if conditions differ significantly from the assessment. No work will begin without your approval.
-        </div>
-
+        <div class="validity-note">📋 <strong>About this estimate:</strong> Prices are based on a property assessment and are valid for 30 days. Final pricing may be adjusted following an on-site visit if conditions differ significantly from the assessment. No work will begin without your approval.</div>
         <div class="grand-box">
             <div><div class="grand-label">Total Estimate</div><div class="grand-date">Valid through ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div></div>
             <div class="grand-amount">${grandTotal}</div>
         </div>
-
         ${mapHtml}
-
         <div class="pdf-footer">
             <p><strong>WS Lawn Care Services, LLC</strong></p>
             <p>Questions? Contact us to schedule or discuss your service options.</p>
             <p style="margin-top:8px;font-size:10.5px;">This document is a service estimate and does not constitute a contract. Actual pricing subject to on-site confirmation.</p>
         </div>
-
         </div>
         <script type="text/javascript">window.onload=function(){setTimeout(function(){window.print();},250);};<\/script>
         </body></html>`);
@@ -1366,8 +1494,7 @@
                 if (!isExpanded) {
                     if (map) { fsBtn._savedCenter = map.getCenter(); fsBtn._savedZoom = map.getZoom(); }
                     overlay.appendChild(mapEl);
-                    mapEl.style.width = '100vw';
-                    mapEl.style.height = '100vh';
+                    mapEl.style.width = '100vw'; mapEl.style.height = '100vh';
                     overlay.style.display = 'block';
                     document.body.style.overflow = 'hidden';
                     if (fc) fc.classList.add('active');
@@ -1376,18 +1503,13 @@
                     setTimeout(() => { google.maps.event.trigger(map, 'resize'); if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter); }, 100);
                 } else {
                     mapWrapper.appendChild(mapEl);
-                    mapEl.style.width = '100%';
-                    mapEl.style.height = '100%';
+                    mapEl.style.width = '100%'; mapEl.style.height = '100%';
                     overlay.style.display = 'none';
                     document.body.style.overflow = '';
                     if (fc) fc.classList.remove('active');
                     fsBtn.innerHTML = '<span style="font-size:20px;">⛶</span> <span class="hidden sm:inline">Open</span> Fullscreen Map';
                     fsBtn.style.cssText = '';
-                    const restoreMap = () => {
-                        google.maps.event.trigger(map, 'resize');
-                        if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter);
-                        if (fsBtn._savedZoom) map.setZoom(fsBtn._savedZoom);
-                    };
+                    const restoreMap = () => { google.maps.event.trigger(map, 'resize'); if (fsBtn._savedCenter) map.setCenter(fsBtn._savedCenter); if (fsBtn._savedZoom) map.setZoom(fsBtn._savedZoom); };
                     setTimeout(restoreMap, 50); setTimeout(restoreMap, 200); setTimeout(restoreMap, 500);
                 }
             });
@@ -1433,10 +1555,7 @@
         try {
             const input = document.getElementById('addressInput');
             if (!input || typeof google === 'undefined' || !google.maps.places) return;
-            const bounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(BREVARD_BOUNDS.south, BREVARD_BOUNDS.west),
-                new google.maps.LatLng(BREVARD_BOUNDS.north, BREVARD_BOUNDS.east)
-            );
+            const bounds = new google.maps.LatLngBounds(new google.maps.LatLng(BREVARD_BOUNDS.south, BREVARD_BOUNDS.west), new google.maps.LatLng(BREVARD_BOUNDS.north, BREVARD_BOUNDS.east));
             autocomplete = new google.maps.places.Autocomplete(input, { bounds, strictBounds: false, componentRestrictions: {country:'us'}, fields: ['geometry','formatted_address'], types: ['address'] });
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
@@ -1470,22 +1589,14 @@
                     const path = e.overlay.getPath();
                     const ft = computePolylineFt(path.getArray());
                     if (ft > 0) {
-                        linearPolylines.push(e.overlay);
-                        linearMeasurements.push(ft);
+                        linearPolylines.push(e.overlay); linearMeasurements.push(ft);
                         const pts = path.getArray();
                         const mid = pts[Math.floor(pts.length / 2)];
                         const segIndex = linearMeasurements.length;
-                        const label = new google.maps.InfoWindow({
-                            content: '<div style="font-weight:700;font-size:13px;color:#92400e;white-space:nowrap;">📏 Seg ' + segIndex + ': ' + Math.round(ft) + ' ft</div>',
-                            disableAutoPan: true
-                        });
-                        label.setPosition(mid);
-                        label.open(map);
-                        linearLabels.push(label);
+                        const label = new google.maps.InfoWindow({ content: '<div style="font-weight:700;font-size:13px;color:#92400e;white-space:nowrap;">📏 Seg ' + segIndex + ': ' + Math.round(ft) + ' ft</div>', disableAutoPan: true });
+                        label.setPosition(mid); label.open(map); linearLabels.push(label);
                         updateLinearPanel();
-                    } else {
-                        e.overlay.setMap(null);
-                    }
+                    } else { e.overlay.setMap(null); }
                     drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYLINE);
                 }
             });
@@ -1504,8 +1615,7 @@
             list.innerHTML = '<p class="text-gray-500 text-sm">No areas drawn yet</p>';
             document.getElementById('totalArea').textContent = '0 sq ft';
             if (linearMeasurements.length === 0 && !isManualTimeMode) document.getElementById('step3').classList.add('hidden');
-            recalcCrewTime();
-            return;
+            recalcCrewTime(); return;
         }
         let html = '<div class="space-y-2"><p class="font-semibold text-gray-700 mb-2 text-sm">Individual Areas:</p>';
         polygons.forEach((poly, i) => {
@@ -1542,7 +1652,6 @@
             document.head.appendChild(s);
         } else { setTimeout(doCapture, 500); }
     }
-
     function doCapture() {
         setTimeout(() => {
             html2canvas(document.getElementById('map'), {useCORS:true,allowTaint:true,logging:false,backgroundColor:'#e5e7eb',scale:2,foreignObjectRendering:false})
