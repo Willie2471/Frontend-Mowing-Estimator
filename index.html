@@ -292,12 +292,6 @@
             transition: background 0.2s;
         }
         .sa-modal-close-btn:hover { background: rgba(255,255,255,0.3); }
-        #saFormContainer iframe {
-            width: 100%;
-            min-height: 680px;
-            border: none;
-            display: block;
-        }
     </style>
 </head>
 <body>
@@ -898,6 +892,7 @@
             </div>
         </div>
 
+
         <!-- ===== SA FORM MODAL ===== -->
         <div id="saFormModal">
             <div class="sa-modal-inner">
@@ -908,7 +903,121 @@
                     </div>
                     <button class="sa-modal-close-btn" onclick="closeSaModal()">×</button>
                 </div>
-                <div id="saFormContainer" style="min-height:200px;"></div>
+
+                <!-- Embedded SA form — no fetch/iframe needed -->
+                <div style="padding:24px 28px;">
+
+                    <!-- Prefill summary bar -->
+                    <div id="saFillSummary" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#166534;font-weight:600;display:none;"></div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                        <!-- First Name -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">First Name <span style="color:red;">*</span></label>
+                            <input type="text" id="sa-embedded-firstname" class="form-input" placeholder="First name" required>
+                        </div>
+                        <!-- Last Name -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Last Name <span style="color:red;">*</span></label>
+                            <input type="text" id="sa-embedded-lastname" class="form-input" placeholder="Last name" required>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                        <!-- Job Type -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Job Type <span style="color:red;">*</span></label>
+                            <select id="sa-embedded-jobtype" class="form-input" style="padding:10px 14px;">
+                                <option value="" disabled selected></option>
+                                <option data-value="fa81b882-dcd7-4d21-b123-3bb997d9408b" value="fa81b882-dcd7-4d21-b123-3bb997d9408b">Bed Maintenance</option>
+                                <option data-value="1563a6af-606f-4a51-994c-d662deccc77d" value="1563a6af-606f-4a51-994c-d662deccc77d">Bed/Shrub Maintenance</option>
+                                <option data-value="58b9f97a-d8f9-4cc9-80d5-2813d2b31a56" value="58b9f97a-d8f9-4cc9-80d5-2813d2b31a56">Bi-Weekly Mowing</option>
+                                <option data-value="ab5b7387-7a84-435a-abfe-3a0045ab8595" value="ab5b7387-7a84-435a-abfe-3a0045ab8595">General Clean Up</option>
+                                <option data-value="2f396ba1-fb7a-41ae-a03b-abe0e9f06175" value="2f396ba1-fb7a-41ae-a03b-abe0e9f06175">Ground Cover Maintenance</option>
+                                <option data-value="a26a071e-4de7-4228-a6df-e83abd8eb246" value="a26a071e-4de7-4228-a6df-e83abd8eb246">Landscape Installation</option>
+                                <option data-value="5c9f85e9-8b01-45c9-8708-6a57c76a9dce" value="5c9f85e9-8b01-45c9-8708-6a57c76a9dce">Mowing Service</option>
+                                <option data-value="2c975fc9-2d5a-43f9-88db-7468c73b6342" value="2c975fc9-2d5a-43f9-88db-7468c73b6342">Mowing/Bed Maintenance</option>
+                                <option data-value="f11f3b38-700c-4a58-8b16-70380d1810da" value="f11f3b38-700c-4a58-8b16-70380d1810da">N/A</option>
+                                <option data-value="f8bccf34-16f6-4757-b41f-0123a2f8a2a9" value="f8bccf34-16f6-4757-b41f-0123a2f8a2a9">Palm Frond Trimming</option>
+                                <option data-value="379b06d8-2438-4a51-810f-3fd427a126f3" value="379b06d8-2438-4a51-810f-3fd427a126f3">Pressure Washing</option>
+                                <option data-value="4bee3e85-abac-4c00-a9e6-1b2ede7a2887" value="4bee3e85-abac-4c00-a9e6-1b2ede7a2887">Rock Bed Installation</option>
+                                <option data-value="90d54b52-6c7c-44ee-93db-330f336bd98b" value="90d54b52-6c7c-44ee-93db-330f336bd98b">Shrub Trimming</option>
+                                <option data-value="861de143-4a93-4c3f-82bf-99d1f1b2511d" value="861de143-4a93-4c3f-82bf-99d1f1b2511d">Sod Install</option>
+                                <option data-value="84af2d22-05f5-405e-a9b7-4de91770f71b" value="84af2d22-05f5-405e-a9b7-4de91770f71b">Sod Prep</option>
+                                <option data-value="f7b2840e-8361-4447-ab7c-51a99ce2ea43" value="f7b2840e-8361-4447-ab7c-51a99ce2ea43">Soil Test</option>
+                                <option data-value="a4d28932-0071-4bd8-ada7-09a3edd81808" value="a4d28932-0071-4bd8-ada7-09a3edd81808">Sprinkler Service</option>
+                                <option data-value="8211048f-9220-463d-a42b-c6c43988aff5" value="8211048f-9220-463d-a42b-c6c43988aff5">Tree Removal</option>
+                                <option data-value="d9017ba3-eb3c-4701-be11-84850bfc16d8" value="d9017ba3-eb3c-4701-be11-84850bfc16d8">Tree Trimming</option>
+                                <option data-value="e35d210c-04e5-489d-a0a7-206220179f21" value="e35d210c-04e5-489d-a0a7-206220179f21">Weed and Fertilization Application</option>
+                                <option data-value="21da138d-0af7-4b47-bd74-3b5dff3bc15a" value="21da138d-0af7-4b47-bd74-3b5dff3bc15a">Weekly Mowing</option>
+                                <option data-value="ea50ecc5-be1b-4aa7-bd70-e1d9e526b9b6" value="ea50ecc5-be1b-4aa7-bd70-e1d9e526b9b6">Woodline Trimming</option>
+                            </select>
+                        </div>
+                        <!-- Frequency -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Frequency <span style="color:red;">*</span></label>
+                            <select id="sa-embedded-frequency" class="form-input" style="padding:10px 14px;">
+                                <option value="" disabled selected></option>
+                                <option data-value="96872314-5148-4dc9-8924-374160af01f7" value="96872314-5148-4dc9-8924-374160af01f7">Annually</option>
+                                <option data-value="13829dbd-3fb3-4b7c-affb-919d45449d64" value="13829dbd-3fb3-4b7c-affb-919d45449d64">Bi-Annually (every 6 months)</option>
+                                <option data-value="64b9649b-25dc-49bf-8d76-44a2942e8caa" value="64b9649b-25dc-49bf-8d76-44a2942e8caa">Bi-Weekly (every 14 days)</option>
+                                <option data-value="f3bb2693-a208-49eb-9534-d672f2b35df7" value="f3bb2693-a208-49eb-9534-d672f2b35df7">Every 3 Weeks</option>
+                                <option data-value="cab531da-95ce-40c1-852f-d050fa434849" value="cab531da-95ce-40c1-852f-d050fa434849">Monthly</option>
+                                <option data-value="4bbad4f5-38d2-4e52-b79f-e997c6a1db64" value="4bbad4f5-38d2-4e52-b79f-e997c6a1db64">One Time</option>
+                                <option data-value="acfb9e75-110c-4dca-9cf2-56926021debf" value="acfb9e75-110c-4dca-9cf2-56926021debf">Quarterly (every 3 months)</option>
+                                <option data-value="39899a92-756c-4a17-beec-2a52a83b60e3" value="39899a92-756c-4a17-beec-2a52a83b60e3">Weekly</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                        <!-- Service Area -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Service Area <span style="color:red;">*</span></label>
+                            <select id="sa-embedded-area" class="form-input" style="padding:10px 14px;">
+                                <option value="" disabled selected></option>
+                                <option data-value="18a546c5-46da-4ccd-9803-045077c4ee4f" value="18a546c5-46da-4ccd-9803-045077c4ee4f">Back</option>
+                                <option data-value="bbda0829-1f64-4d77-adc1-f288fef85ee2" value="bbda0829-1f64-4d77-adc1-f288fef85ee2">Extra Lot</option>
+                                <option data-value="7e17b8cc-e3b9-49ea-abe9-f4f703883d8d" value="7e17b8cc-e3b9-49ea-abe9-f4f703883d8d">Front</option>
+                                <option data-value="360bc946-c401-4766-b0fb-4a795068b537" value="360bc946-c401-4766-b0fb-4a795068b537">Front &amp; Back</option>
+                                <option data-value="15fe5090-0986-45c3-ae81-1e9a6afd4637" value="15fe5090-0986-45c3-ae81-1e9a6afd4637">Front, Back, &amp; Extra Lot</option>
+                            </select>
+                        </div>
+                        <!-- Per Visit Cost -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Per Visit Cost <span style="color:red;">*</span></label>
+                            <div style="position:relative;">
+                                <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#6b7280;font-weight:700;font-size:15px;">$</span>
+                                <input type="number" id="sa-embedded-cost" class="form-input" style="padding-left:28px;" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Material</label>
+                        <input type="text" id="sa-embedded-material" class="form-input" placeholder="Enter N/A If No Material">
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Deposit / Monthly Cost</label>
+                        <div style="position:relative;">
+                            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#6b7280;font-weight:700;font-size:15px;">$</span>
+                            <input type="number" id="sa-embedded-deposit" class="form-input" style="padding-left:28px;" placeholder="Leave blank if no deposit" step="0.01" min="0">
+                        </div>
+                        <div style="font-size:11px;color:#9ca3af;margin-top:4px;">Formula: Per Visit Cost × Frequency = Monthly Cost</div>
+                    </div>
+
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Important Project Notes</label>
+                        <input type="text" id="sa-embedded-notes" class="form-input" placeholder="Leave blank if no important notes">
+                    </div>
+
+                    <!-- Submit -->
+                    <button id="saSubmitBtn" onclick="submitSaForm()" style="width:100%;padding:14px;background:linear-gradient(135deg,#166534,#15803d);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;transition:opacity 0.2s;">
+                        ✅ Submit to ServiceAutopilot
+                    </button>
+                    <div id="saSubmitStatus" style="display:none;margin-top:12px;text-align:center;font-size:13px;font-weight:600;"></div>
+                </div>
             </div>
         </div>
 
@@ -954,59 +1063,203 @@
     };
 
     // ===== SA FORM MODAL =====
+
+    // Frequency map: our estimator values -> SA dropdown data-value attributes
+    const SA_FREQUENCY_MAP = {
+        onetime:  '4bbad4f5-38d2-4e52-b79f-e997c6a1db64', // One Time
+        weekly:   '39899a92-756c-4a17-beec-2a52a83b60e3', // Weekly
+        biweekly: '64b9649b-25dc-49bf-8d76-44a2942e8caa', // Bi-Weekly (every 14 days)
+        monthly:  'cab531da-95ce-40c1-852f-d050fa434849'  // Monthly
+    };
+
     function closeSaModal() {
         document.getElementById('saFormModal').style.display = 'none';
-        document.getElementById('saFormContainer').innerHTML = '';
     }
 
     function openSaForm() {
-        const firstName = document.getElementById('customerFirstName').value.trim();
-        const lastName  = document.getElementById('customerLastName').value.trim();
-        const subtitle  = document.getElementById('saFormSubtitle');
+        const firstName  = document.getElementById('customerFirstName').value.trim();
+        const lastName   = document.getElementById('customerLastName').value.trim();
+        const inclMowing = document.getElementById('includeMowing').checked;
+        const inclBed    = document.getElementById('includeBed').checked;
+        const inclHedge  = document.getElementById('includeHedge').checked;
+        const freqVal    = inclMowing ? (document.getElementById('frequency').value || 'onetime') : 'onetime';
+        const grandTotal = document.getElementById('resGrandTotal').textContent.replace(/[$,]/g,'').trim();
 
+        // Auto-determine job type from selected services
+        // SA Job Type UUIDs:
+        const JOB_TYPE_MAP = {
+            mow_only:     '5c9f85e9-8b01-45c9-8708-6a57c76a9dce', // Mowing Service
+            bed_only:     'fa81b882-dcd7-4d21-b123-3bb997d9408b', // Bed Maintenance
+            hedge_only:   '90d54b52-6c7c-44ee-93db-330f336bd98b', // Shrub Trimming
+            mow_bed:      '2c975fc9-2d5a-43f9-88db-7468c73b6342', // Mowing/Bed Maintenance
+            bed_hedge:    '1563a6af-606f-4a51-994c-d662deccc77d', // Bed/Shrub Maintenance
+            mow_hedge:    '5c9f85e9-8b01-45c9-8708-6a57c76a9dce', // Mowing Service (closest)
+            mow_bed_hedge:'2c975fc9-2d5a-43f9-88db-7468c73b6342'  // Mowing/Bed Maintenance (closest)
+        };
+        let jobTypeVal = '';
+        if (inclMowing && inclBed && inclHedge) jobTypeVal = JOB_TYPE_MAP.mow_bed_hedge;
+        else if (inclMowing && inclBed)          jobTypeVal = JOB_TYPE_MAP.mow_bed;
+        else if (inclBed && inclHedge)           jobTypeVal = JOB_TYPE_MAP.bed_hedge;
+        else if (inclMowing && inclHedge)        jobTypeVal = JOB_TYPE_MAP.mow_hedge;
+        else if (inclMowing)                     jobTypeVal = JOB_TYPE_MAP.mow_only;
+        else if (inclBed)                        jobTypeVal = JOB_TYPE_MAP.bed_only;
+        else if (inclHedge)                      jobTypeVal = JOB_TYPE_MAP.hedge_only;
+
+        // Update subtitle
+        const subtitle = document.getElementById('saFormSubtitle');
         if (subtitle) {
             subtitle.textContent = (firstName || lastName)
                 ? 'Pre-filled for: ' + firstName + ' ' + lastName + (propertyAddress ? ' · ' + propertyAddress : '')
                 : 'Fill in customer details below';
         }
 
-        const container = document.getElementById('saFormContainer');
-        container.innerHTML = '<div style="padding:36px;text-align:center;color:#6b7280;font-size:14px;">⏳ Loading form…</div>';
+        // Prefill all embedded fields
+        const fn  = document.getElementById('sa-embedded-firstname');
+        const ln  = document.getElementById('sa-embedded-lastname');
+        const fr  = document.getElementById('sa-embedded-frequency');
+        const cv  = document.getElementById('sa-embedded-cost');
+        const jt  = document.getElementById('sa-embedded-jobtype');
+        const sum = document.getElementById('saFillSummary');
 
-        // Build SA form URL with field prefill query params
-        // SA form fields: field_1 = First Name, field_2 = Last Name
-        const saFormUrl = 'https://forms.serviceautopilot.com/View/5a07638b-058b-4857-946d-f3c89395aa78'
-            + '?field_1=' + encodeURIComponent(firstName)
-            + '&field_2=' + encodeURIComponent(lastName);
+        if (fn) fn.value = firstName;
+        if (ln) ln.value = lastName;
+        if (cv) cv.value = grandTotal;
 
-        const iframe = document.createElement('iframe');
-        iframe.src = saFormUrl;
-        iframe.style.cssText = 'width:100%;min-height:700px;border:none;display:block;';
-        iframe.setAttribute('title', 'ServiceAutopilot Submission Form');
+        // Prefill Frequency dropdown
+        if (fr) {
+            const targetVal = SA_FREQUENCY_MAP[freqVal] || SA_FREQUENCY_MAP['onetime'];
+            for (let i = 0; i < fr.options.length; i++) {
+                if (fr.options[i].getAttribute('data-value') === targetVal) {
+                    fr.selectedIndex = i; break;
+                }
+            }
+        }
 
-        iframe.onload = function() {
-            // Attempt same-origin DOM prefill (silent fail if cross-origin — URL params cover it)
-            try {
-                const doc = iframe.contentDocument || iframe.contentWindow.document;
-                const fnEl = doc.querySelector('#sa-txt-f0623165-724e-4ed9-8dc4-38905440b0f3-input');
-                const lnEl = doc.querySelector('#sa-txt-e10d5e4f-d77a-4620-81ca-3122882a5eea-input');
-                if (fnEl && fnEl.value !== firstName) { fnEl.value = firstName; fnEl.dispatchEvent(new Event('input', {bubbles:true})); }
-                if (lnEl && lnEl.value !== lastName)  { lnEl.value = lastName;  lnEl.dispatchEvent(new Event('input', {bubbles:true})); }
-            } catch(e) { /* cross-origin restriction — URL param prefill is the primary mechanism */ }
-        };
+        // Prefill Job Type dropdown
+        if (jt && jobTypeVal) {
+            for (let i = 0; i < jt.options.length; i++) {
+                if (jt.options[i].getAttribute('data-value') === jobTypeVal) {
+                    jt.selectedIndex = i; break;
+                }
+            }
+        }
 
-        container.innerHTML = '';
-        container.appendChild(iframe);
+        // Show prefill summary bar
+        if (sum) {
+            const freqLabels = { onetime:'One Time', weekly:'Weekly', biweekly:'Bi-Weekly', monthly:'Monthly' };
+            sum.style.display = 'block';
+            sum.innerHTML = '✅ Pre-filled: <strong>' + firstName + ' ' + lastName + '</strong>'
+                + ' &nbsp;·&nbsp; Frequency: <strong>' + (freqLabels[freqVal] || freqVal) + '</strong>'
+                + ' &nbsp;·&nbsp; Per Visit Cost: <strong>$' + grandTotal + '</strong>'
+                + (propertyAddress ? ' &nbsp;·&nbsp; ' + propertyAddress : '');
+        }
+
+        // Reset submit status
+        const status = document.getElementById('saSubmitStatus');
+        if (status) { status.style.display = 'none'; status.textContent = ''; }
+        const btn = document.getElementById('saSubmitBtn');
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '✅ Submit to ServiceAutopilot'; }
 
         const modal = document.getElementById('saFormModal');
         modal.style.display = 'block';
         modal.scrollTop = 0;
     }
 
+    function submitSaForm() {
+        const btn    = document.getElementById('saSubmitBtn');
+        const status = document.getElementById('saSubmitStatus');
+
+        // Gather values
+        const firstName = (document.getElementById('sa-embedded-firstname').value || '').trim();
+        const lastName  = (document.getElementById('sa-embedded-lastname').value || '').trim();
+        const jobType   = document.getElementById('sa-embedded-jobtype').value;
+        const frequency = document.getElementById('sa-embedded-frequency').value;
+        const area      = document.getElementById('sa-embedded-area').value;
+        const cost      = document.getElementById('sa-embedded-cost').value;
+        const deposit   = document.getElementById('sa-embedded-deposit').value;
+        const material  = (document.getElementById('sa-embedded-material').value || '').trim();
+        const notes     = (document.getElementById('sa-embedded-notes').value || '').trim();
+
+        // Validate required fields
+        if (!firstName) { alert('Please enter a first name'); document.getElementById('sa-embedded-firstname').focus(); return; }
+        if (!lastName)  { alert('Please enter a last name');  document.getElementById('sa-embedded-lastname').focus();  return; }
+        if (!jobType)   { alert('Please select a Job Type');   document.getElementById('sa-embedded-jobtype').focus();   return; }
+        if (!frequency) { alert('Please select a Frequency'); document.getElementById('sa-embedded-frequency').focus(); return; }
+        if (!area)      { alert('Please select a Service Area'); document.getElementById('sa-embedded-area').focus();   return; }
+        if (!cost)      { alert('Please enter a Per Visit Cost'); document.getElementById('sa-embedded-cost').focus();  return; }
+
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.textContent = '⏳ Submitting…';
+        status.style.display = 'none';
+
+        // Build payload matching SA form field IDs from doc 2
+        const submitData = {
+            pages: [{
+                page: 2,
+                fields: [
+                    { fieldId: 1,  value: firstName },
+                    { fieldId: 2,  value: lastName  },
+                    { fieldId: 4,  value: jobType   },
+                    { fieldId: 5,  value: frequency },
+                    { fieldId: 6,  value: area      },
+                    { fieldId: 7,  value: material || 'N/A' },
+                    { fieldId: 8,  value: notes || '' },
+                    { fieldId: 9,  value: cost      },
+                    { fieldId: 10, value: deposit || '' }
+                ]
+            }]
+        };
+
+        const data = {
+            request: {
+                formTemplateId: '5a07638b-058b-4857-946d-f3c89395aa78',
+                submittedById: null,
+                submittedByType: null,
+                parentId: null,
+                parentType: null,
+                source: null,
+                data: submitData
+            }
+        };
+
+        fetch('https://my.serviceautopilot.com/MarketingBFF/Form/SubmitForm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'x-CompanyID': 'd2fbdc9b-4692-4abd-a1e9-43840456fdcb'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(r => {
+            if (r.ok || r.status === 200) {
+                btn.textContent = '✅ Submitted!';
+                btn.style.background = '#16a34a';
+                status.style.display = 'block';
+                status.style.color = '#16a34a';
+                status.innerHTML = '✅ <strong>' + firstName + ' ' + lastName + '</strong> successfully submitted to ServiceAutopilot!';
+                setTimeout(() => closeSaModal(), 2500);
+            } else {
+                throw new Error('Status ' + r.status);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.textContent = '✅ Submit to ServiceAutopilot';
+            status.style.display = 'block';
+            status.style.color = '#dc2626';
+            status.innerHTML = '❌ Submission failed (' + err.message + '). Check connection and try again.';
+        });
+    }
+
     // Close SA modal on backdrop click
     document.getElementById('saFormModal').addEventListener('click', function(e) {
         if (e.target === this) closeSaModal();
     });
+
+
 
     // ===== SEASON MODE =====
     function applySeasonMode() {
