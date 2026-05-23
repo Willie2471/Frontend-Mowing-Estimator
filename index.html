@@ -1169,7 +1169,7 @@
         const btn    = document.getElementById('saSubmitBtn');
         const status = document.getElementById('saSubmitStatus');
 
-        // Gather values
+        // Gather + validate
         const firstName = (document.getElementById('sa-embedded-firstname').value || '').trim();
         const lastName  = (document.getElementById('sa-embedded-lastname').value || '').trim();
         const jobType   = document.getElementById('sa-embedded-jobtype').value;
@@ -1180,7 +1180,6 @@
         const material  = (document.getElementById('sa-embedded-material').value || '').trim();
         const notes     = (document.getElementById('sa-embedded-notes').value || '').trim();
 
-        // Validate required fields
         if (!firstName) { alert('Please enter a first name'); document.getElementById('sa-embedded-firstname').focus(); return; }
         if (!lastName)  { alert('Please enter a last name');  document.getElementById('sa-embedded-lastname').focus();  return; }
         if (!jobType)   { alert('Please select a Job Type');  document.getElementById('sa-embedded-jobtype').focus();   return; }
@@ -1193,65 +1192,51 @@
         btn.textContent = '⏳ Submitting…';
         status.style.display = 'none';
 
-        // Build the SA payload
-        const submitData = {
-            pages: [{
-                page: 2,
-                fields: [
-                    { fieldId: 1,  value: firstName },
-                    { fieldId: 2,  value: lastName  },
-                    { fieldId: 4,  value: jobType   },
-                    { fieldId: 5,  value: frequency },
-                    { fieldId: 6,  value: area      },
-                    { fieldId: 7,  value: material || 'N/A' },
-                    { fieldId: 8,  value: notes     },
-                    { fieldId: 9,  value: cost      },
-                    { fieldId: 10, value: deposit   }
-                ]
-            }]
-        };
-
-        const payload = JSON.stringify({
+        // Build exact SA payload
+        const payload = {
             request: {
                 formTemplateId: '5a07638b-058b-4857-946d-f3c89395aa78',
-                submittedById: null,
-                submittedByType: null,
-                parentId: null,
-                parentType: null,
-                source: null,
-                data: submitData
+                submittedById: null, submittedByType: null,
+                parentId: null, parentType: null, source: null,
+                data: {
+                    pages: [{
+                        page: 2,
+                        fields: [
+                            { fieldId: 1,  value: firstName },
+                            { fieldId: 2,  value: lastName  },
+                            { fieldId: 4,  value: jobType   },
+                            { fieldId: 5,  value: frequency },
+                            { fieldId: 6,  value: area      },
+                            { fieldId: 7,  value: material || 'N/A' },
+                            { fieldId: 8,  value: notes     },
+                            { fieldId: 9,  value: cost      },
+                            { fieldId: 10, value: deposit   }
+                        ]
+                    }]
+                }
             }
-        });
+        };
 
-        // Use a hidden iframe as the form target so the POST navigates
-        // inside the iframe instead of our page — bypasses CORS for form submissions
-        let submitIframe = document.getElementById('saSubmitIframe');
-        if (!submitIframe) {
-            submitIframe = document.createElement('iframe');
-            submitIframe.id = 'saSubmitIframe';
-            submitIframe.name = 'saSubmitIframe';
-            submitIframe.style.display = 'none';
-            document.body.appendChild(submitIframe);
-        }
-
-        // Create a hidden form that POSTs JSON via a text input
-        // SA endpoint expects JSON body — use application/json content type
-        // Native form POST sends application/x-www-form-urlencoded which SA won't accept.
-        // Instead: open a small popup window with a self-submitting page
-        const popupHtml = `<!DOCTYPE html><html><head><title>Submitting to SA…</title>
-<style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f0fdf4;}
-.box{text-align:center;padding:40px;background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);max-width:400px;}
-.spinner{width:40px;height:40px;border:4px solid #e5e7eb;border-top:4px solid #16a34a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-h2{color:#166534;margin:0 0 8px}p{color:#6b7280;font-size:14px;margin:0}
-.success{color:#16a34a;font-size:48px;margin-bottom:12px}
-.error{color:#dc2626;font-size:14px;margin-top:12px;padding:10px;background:#fef2f2;border-radius:8px}
-</style></head><body>
-<div class="box">
-  <div class="spinner" id="spin"></div>
-  <h2 id="msg">Submitting to ServiceAutopilot…</h2>
-  <p id="sub">Please wait</p>
-  <div id="errBox" class="error" style="display:none"></div>
+        // Write a self-contained submitter page as a Blob URL.
+        // A blob: URL is treated as same-origin by the browser, so it can
+        // freely POST to any external endpoint without CORS preflight issues.
+        const submitterHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Submitting…</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:Arial,sans-serif;background:#f0fdf4;display:flex;align-items:center;justify-content:center;height:100vh;}
+  .card{background:white;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);padding:40px 48px;text-align:center;max-width:420px;width:90%;}
+  .spinner{width:48px;height:48px;border:4px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  h2{color:#166534;font-size:20px;margin-bottom:8px;}
+  p{color:#6b7280;font-size:14px;}
+  .ok{font-size:52px;margin-bottom:12px;}
+  .err{margin-top:14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px;color:#dc2626;font-size:13px;}
+</style></head><body><div class="card">
+  <div class="spinner" id="sp"></div>
+  <h2 id="h">Submitting to ServiceAutopilot…</h2>
+  <p id="p">Please wait</p>
+  <div class="err" id="e" style="display:none"></div>
 </div>
 <script>
 fetch('https://my.serviceautopilot.com/MarketingBFF/Form/SubmitForm',{
@@ -1261,76 +1246,73 @@ fetch('https://my.serviceautopilot.com/MarketingBFF/Form/SubmitForm',{
     'X-Requested-With':'XMLHttpRequest',
     'x-CompanyID':'d2fbdc9b-4692-4abd-a1e9-43840456fdcb'
   },
-  body:${JSON.stringify(payload)}
-}).then(r=>{
-  document.getElementById('spin').style.display='none';
+  body:'${JSON.stringify(payload).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}'
+}).then(async r=>{
+  const txt = await r.text().catch(()=>'');
   if(r.ok||r.status===200){
-    document.getElementById('msg').textContent='✅ Submitted!';
-    document.getElementById('sub').textContent='${firstName} ${lastName} has been added to ServiceAutopilot.';
-    window.opener && window.opener.postMessage('sa_submit_success','*');
-    setTimeout(()=>window.close(),2500);
+    document.getElementById('sp').style.display='none';
+    document.getElementById('h').textContent='✅ Submitted!';
+    document.getElementById('p').textContent='${firstName} ${lastName} added to ServiceAutopilot.';
+    if(window.opener) window.opener.postMessage('sa_ok','*');
+    setTimeout(()=>window.close(),2200);
   } else {
-    throw new Error('Server returned status '+r.status);
+    throw new Error('HTTP '+r.status+(txt?' — '+txt.slice(0,120):''));
   }
 }).catch(err=>{
-  document.getElementById('spin').style.display='none';
-  document.getElementById('msg').textContent='Submission Failed';
-  document.getElementById('sub').textContent='';
-  document.getElementById('errBox').style.display='block';
-  document.getElementById('errBox').textContent='Error: '+err.message+'. Please check your internet connection and try again.';
-  window.opener && window.opener.postMessage('sa_submit_error:'+err.message,'*');
+  document.getElementById('sp').style.display='none';
+  document.getElementById('h').textContent='Submission Failed';
+  document.getElementById('p').textContent='';
+  document.getElementById('e').style.display='block';
+  document.getElementById('e').textContent=err.message;
+  if(window.opener) window.opener.postMessage('sa_err:'+err.message,'*');
 });
 <\/script></body></html>`;
 
-        const popup = window.open('', 'saSubmitPopup', 'width=420,height=280,top=200,left=400');
+        // Create blob URL — treated as null origin, not blocked by CORS
+        const blob = new Blob([submitterHtml], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+
+        const popup = window.open(blobUrl, 'saSubmitter', 'width=440,height=240,top=200,left=400,toolbar=no,menubar=no');
+
         if (!popup) {
-            // Popup blocked — fall back to showing the error with a retry note
-            btn.disabled = false;
-            btn.style.opacity = '1';
+            URL.revokeObjectURL(blobUrl);
+            btn.disabled = false; btn.style.opacity = '1';
             btn.textContent = '✅ Submit to ServiceAutopilot';
-            status.style.display = 'block';
-            status.style.color = '#dc2626';
-            status.innerHTML = '⚠️ Popup blocked by browser. Please allow popups for this page, then try again.';
+            status.style.display = 'block'; status.style.color = '#b45309';
+            status.innerHTML = '⚠️ Popup blocked — please allow popups for this page in your browser bar, then try again.';
             return;
         }
 
-        popup.document.open();
-        popup.document.write(popupHtml);
-        popup.document.close();
+        // Revoke blob URL after popup loads (it's already in memory)
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
 
-        // Listen for result message back from popup
-        const msgHandler = function(e) {
-            if (e.data === 'sa_submit_success') {
+        // Listen for result from the popup
+        function onMsg(e) {
+            if (e.data === 'sa_ok') {
                 btn.textContent = '✅ Submitted!';
                 btn.style.background = '#16a34a';
-                btn.disabled = true;
-                status.style.display = 'block';
-                status.style.color = '#16a34a';
-                status.innerHTML = '✅ <strong>' + firstName + ' ' + lastName + '</strong> successfully submitted to ServiceAutopilot!';
-                window.removeEventListener('message', msgHandler);
+                status.style.display = 'block'; status.style.color = '#16a34a';
+                status.innerHTML = '✅ <strong>' + firstName + ' ' + lastName + '</strong> submitted to ServiceAutopilot!';
+                window.removeEventListener('message', onMsg);
                 setTimeout(() => closeSaModal(), 2500);
-            } else if (typeof e.data === 'string' && e.data.startsWith('sa_submit_error')) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
+            } else if (typeof e.data === 'string' && e.data.startsWith('sa_err:')) {
+                btn.disabled = false; btn.style.opacity = '1';
                 btn.textContent = '✅ Submit to ServiceAutopilot';
-                status.style.display = 'block';
-                status.style.color = '#dc2626';
-                const errMsg = e.data.replace('sa_submit_error:', '');
-                status.innerHTML = '❌ Submission failed: ' + errMsg + '. Check connection and try again.';
-                window.removeEventListener('message', msgHandler);
+                status.style.display = 'block'; status.style.color = '#dc2626';
+                status.innerHTML = '❌ ' + e.data.replace('sa_err:','');
+                window.removeEventListener('message', onMsg);
             }
-        };
-        window.addEventListener('message', msgHandler);
+        }
+        window.addEventListener('message', onMsg);
 
-        // Re-enable button after 10s timeout in case popup is closed manually
+        // Safety timeout — re-enable if popup closed without response
         setTimeout(() => {
+            window.removeEventListener('message', onMsg);
             if (btn.disabled && btn.textContent.includes('Submitting')) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
+                btn.disabled = false; btn.style.opacity = '1';
                 btn.textContent = '✅ Submit to ServiceAutopilot';
             }
-            window.removeEventListener('message', msgHandler);
-        }, 10000);
+        }, 15000);
     }
 
     // Close SA modal on backdrop click
