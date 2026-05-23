@@ -1183,17 +1183,17 @@
         // Validate required fields
         if (!firstName) { alert('Please enter a first name'); document.getElementById('sa-embedded-firstname').focus(); return; }
         if (!lastName)  { alert('Please enter a last name');  document.getElementById('sa-embedded-lastname').focus();  return; }
-        if (!jobType)   { alert('Please select a Job Type');   document.getElementById('sa-embedded-jobtype').focus();   return; }
+        if (!jobType)   { alert('Please select a Job Type');  document.getElementById('sa-embedded-jobtype').focus();   return; }
         if (!frequency) { alert('Please select a Frequency'); document.getElementById('sa-embedded-frequency').focus(); return; }
         if (!area)      { alert('Please select a Service Area'); document.getElementById('sa-embedded-area').focus();   return; }
         if (!cost)      { alert('Please enter a Per Visit Cost'); document.getElementById('sa-embedded-cost').focus();  return; }
 
         btn.disabled = true;
-        btn.style.opacity = '0.6';
+        btn.style.opacity = '0.7';
         btn.textContent = '⏳ Submitting…';
         status.style.display = 'none';
 
-        // Build payload matching SA form field IDs from doc 2
+        // Build the SA payload
         const submitData = {
             pages: [{
                 page: 2,
@@ -1204,14 +1204,14 @@
                     { fieldId: 5,  value: frequency },
                     { fieldId: 6,  value: area      },
                     { fieldId: 7,  value: material || 'N/A' },
-                    { fieldId: 8,  value: notes || '' },
+                    { fieldId: 8,  value: notes     },
                     { fieldId: 9,  value: cost      },
-                    { fieldId: 10, value: deposit || '' }
+                    { fieldId: 10, value: deposit   }
                 ]
             }]
         };
 
-        const data = {
+        const payload = JSON.stringify({
             request: {
                 formTemplateId: '5a07638b-058b-4857-946d-f3c89395aa78',
                 submittedById: null,
@@ -1221,37 +1221,116 @@
                 source: null,
                 data: submitData
             }
-        };
+        });
 
-        fetch('https://my.serviceautopilot.com/MarketingBFF/Form/SubmitForm', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                'X-Requested-With': 'XMLHttpRequest',
-                'x-CompanyID': 'd2fbdc9b-4692-4abd-a1e9-43840456fdcb'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(r => {
-            if (r.ok || r.status === 200) {
-                btn.textContent = '✅ Submitted!';
-                btn.style.background = '#16a34a';
-                status.style.display = 'block';
-                status.style.color = '#16a34a';
-                status.innerHTML = '✅ <strong>' + firstName + ' ' + lastName + '</strong> successfully submitted to ServiceAutopilot!';
-                setTimeout(() => closeSaModal(), 2500);
-            } else {
-                throw new Error('Status ' + r.status);
-            }
-        })
-        .catch(err => {
+        // Use a hidden iframe as the form target so the POST navigates
+        // inside the iframe instead of our page — bypasses CORS for form submissions
+        let submitIframe = document.getElementById('saSubmitIframe');
+        if (!submitIframe) {
+            submitIframe = document.createElement('iframe');
+            submitIframe.id = 'saSubmitIframe';
+            submitIframe.name = 'saSubmitIframe';
+            submitIframe.style.display = 'none';
+            document.body.appendChild(submitIframe);
+        }
+
+        // Create a hidden form that POSTs JSON via a text input
+        // SA endpoint expects JSON body — use application/json content type
+        // Native form POST sends application/x-www-form-urlencoded which SA won't accept.
+        // Instead: open a small popup window with a self-submitting page
+        const popupHtml = `<!DOCTYPE html><html><head><title>Submitting to SA…</title>
+<style>body{font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f0fdf4;}
+.box{text-align:center;padding:40px;background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);max-width:400px;}
+.spinner{width:40px;height:40px;border:4px solid #e5e7eb;border-top:4px solid #16a34a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+h2{color:#166534;margin:0 0 8px}p{color:#6b7280;font-size:14px;margin:0}
+.success{color:#16a34a;font-size:48px;margin-bottom:12px}
+.error{color:#dc2626;font-size:14px;margin-top:12px;padding:10px;background:#fef2f2;border-radius:8px}
+</style></head><body>
+<div class="box">
+  <div class="spinner" id="spin"></div>
+  <h2 id="msg">Submitting to ServiceAutopilot…</h2>
+  <p id="sub">Please wait</p>
+  <div id="errBox" class="error" style="display:none"></div>
+</div>
+<script>
+fetch('https://my.serviceautopilot.com/MarketingBFF/Form/SubmitForm',{
+  method:'POST',
+  headers:{
+    'Content-Type':'application/json; charset=utf-8',
+    'X-Requested-With':'XMLHttpRequest',
+    'x-CompanyID':'d2fbdc9b-4692-4abd-a1e9-43840456fdcb'
+  },
+  body:${JSON.stringify(payload)}
+}).then(r=>{
+  document.getElementById('spin').style.display='none';
+  if(r.ok||r.status===200){
+    document.getElementById('msg').textContent='✅ Submitted!';
+    document.getElementById('sub').textContent='${firstName} ${lastName} has been added to ServiceAutopilot.';
+    window.opener && window.opener.postMessage('sa_submit_success','*');
+    setTimeout(()=>window.close(),2500);
+  } else {
+    throw new Error('Server returned status '+r.status);
+  }
+}).catch(err=>{
+  document.getElementById('spin').style.display='none';
+  document.getElementById('msg').textContent='Submission Failed';
+  document.getElementById('sub').textContent='';
+  document.getElementById('errBox').style.display='block';
+  document.getElementById('errBox').textContent='Error: '+err.message+'. Please check your internet connection and try again.';
+  window.opener && window.opener.postMessage('sa_submit_error:'+err.message,'*');
+});
+<\/script></body></html>`;
+
+        const popup = window.open('', 'saSubmitPopup', 'width=420,height=280,top=200,left=400');
+        if (!popup) {
+            // Popup blocked — fall back to showing the error with a retry note
             btn.disabled = false;
             btn.style.opacity = '1';
             btn.textContent = '✅ Submit to ServiceAutopilot';
             status.style.display = 'block';
             status.style.color = '#dc2626';
-            status.innerHTML = '❌ Submission failed (' + err.message + '). Check connection and try again.';
-        });
+            status.innerHTML = '⚠️ Popup blocked by browser. Please allow popups for this page, then try again.';
+            return;
+        }
+
+        popup.document.open();
+        popup.document.write(popupHtml);
+        popup.document.close();
+
+        // Listen for result message back from popup
+        const msgHandler = function(e) {
+            if (e.data === 'sa_submit_success') {
+                btn.textContent = '✅ Submitted!';
+                btn.style.background = '#16a34a';
+                btn.disabled = true;
+                status.style.display = 'block';
+                status.style.color = '#16a34a';
+                status.innerHTML = '✅ <strong>' + firstName + ' ' + lastName + '</strong> successfully submitted to ServiceAutopilot!';
+                window.removeEventListener('message', msgHandler);
+                setTimeout(() => closeSaModal(), 2500);
+            } else if (typeof e.data === 'string' && e.data.startsWith('sa_submit_error')) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.textContent = '✅ Submit to ServiceAutopilot';
+                status.style.display = 'block';
+                status.style.color = '#dc2626';
+                const errMsg = e.data.replace('sa_submit_error:', '');
+                status.innerHTML = '❌ Submission failed: ' + errMsg + '. Check connection and try again.';
+                window.removeEventListener('message', msgHandler);
+            }
+        };
+        window.addEventListener('message', msgHandler);
+
+        // Re-enable button after 10s timeout in case popup is closed manually
+        setTimeout(() => {
+            if (btn.disabled && btn.textContent.includes('Submitting')) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.textContent = '✅ Submit to ServiceAutopilot';
+            }
+            window.removeEventListener('message', msgHandler);
+        }, 10000);
     }
 
     // Close SA modal on backdrop click
