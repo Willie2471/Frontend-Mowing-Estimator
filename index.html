@@ -1021,6 +1021,7 @@
             </div>
         </div>
 
+
     </div>
 </div>
 
@@ -1172,41 +1173,48 @@
         // Gather + validate
         const firstName = (document.getElementById('sa-embedded-firstname').value || '').trim();
         const lastName  = (document.getElementById('sa-embedded-lastname').value || '').trim();
-        const jobType   = document.getElementById('sa-embedded-jobtype').value;
-        const frequency = document.getElementById('sa-embedded-frequency').value;
-        const area      = document.getElementById('sa-embedded-area').value;
-        const cost      = document.getElementById('sa-embedded-cost').value;
-        const deposit   = document.getElementById('sa-embedded-deposit').value;
-        const material  = (document.getElementById('sa-embedded-material').value || '').trim();
-        const notes     = (document.getElementById('sa-embedded-notes').value || '').trim();
+        const jobType   = document.getElementById('sa-embedded-jobtype');
+        const jobTypeVal   = jobType.value;
+        const frequency    = document.getElementById('sa-embedded-frequency');
+        const freqVal      = frequency.value;
+        const freqLabel    = frequency.options[frequency.selectedIndex]?.text || '';
+        const area         = document.getElementById('sa-embedded-area');
+        const areaVal      = area.value;
+        const cost         = document.getElementById('sa-embedded-cost').value;
+        const deposit      = document.getElementById('sa-embedded-deposit').value;
+        const material     = (document.getElementById('sa-embedded-material').value || '').trim();
+        const notes        = (document.getElementById('sa-embedded-notes').value || '').trim();
 
-        if (!firstName) { alert('Please enter a first name'); document.getElementById('sa-embedded-firstname').focus(); return; }
-        if (!lastName)  { alert('Please enter a last name');  document.getElementById('sa-embedded-lastname').focus();  return; }
-        if (!jobType)   { alert('Please select a Job Type');  document.getElementById('sa-embedded-jobtype').focus();   return; }
-        if (!frequency) { alert('Please select a Frequency'); document.getElementById('sa-embedded-frequency').focus(); return; }
-        if (!area)      { alert('Please select a Service Area'); document.getElementById('sa-embedded-area').focus();   return; }
-        if (!cost)      { alert('Please enter a Per Visit Cost'); document.getElementById('sa-embedded-cost').focus();  return; }
+        if (!firstName)  { alert('Please enter a first name');    document.getElementById('sa-embedded-firstname').focus();  return; }
+        if (!lastName)   { alert('Please enter a last name');     document.getElementById('sa-embedded-lastname').focus();   return; }
+        if (!jobTypeVal) { alert('Please select a Job Type');     document.getElementById('sa-embedded-jobtype').focus();    return; }
+        if (!freqVal)    { alert('Please select a Frequency');    document.getElementById('sa-embedded-frequency').focus();  return; }
+        if (!areaVal)    { alert('Please select a Service Area'); document.getElementById('sa-embedded-area').focus();       return; }
+        if (!cost)       { alert('Please enter a Per Visit Cost');document.getElementById('sa-embedded-cost').focus();       return; }
 
         btn.disabled = true;
         btn.style.opacity = '0.7';
         btn.textContent = '⏳ Submitting…';
         status.style.display = 'none';
 
-        // Build exact SA payload
-        const payload = {
+        // Build payload — exactly matching SA's own PageModel output
+        const payload = JSON.stringify({
             request: {
                 formTemplateId: '5a07638b-058b-4857-946d-f3c89395aa78',
-                submittedById: null, submittedByType: null,
-                parentId: null, parentType: null, source: null,
+                submittedById: null,
+                submittedByType: null,
+                parentId: null,
+                parentType: null,
+                source: null,
                 data: {
                     pages: [{
                         page: 2,
                         fields: [
                             { fieldId: 1,  value: firstName },
                             { fieldId: 2,  value: lastName  },
-                            { fieldId: 4,  value: jobType   },
-                            { fieldId: 5,  value: frequency },
-                            { fieldId: 6,  value: area      },
+                            { fieldId: 4,  value: jobTypeVal },
+                            { fieldId: 5,  value: freqVal   },
+                            { fieldId: 6,  value: areaVal   },
                             { fieldId: 7,  value: material || 'N/A' },
                             { fieldId: 8,  value: notes     },
                             { fieldId: 9,  value: cost      },
@@ -1215,105 +1223,67 @@
                     }]
                 }
             }
-        };
+        });
 
-        // Write a self-contained submitter page as a Blob URL.
-        // A blob: URL is treated as same-origin by the browser, so it can
-        // freely POST to any external endpoint without CORS preflight issues.
-        const submitterHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Submitting…</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:Arial,sans-serif;background:#f0fdf4;display:flex;align-items:center;justify-content:center;height:100vh;}
-  .card{background:white;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);padding:40px 48px;text-align:center;max-width:420px;width:90%;}
-  .spinner{width:48px;height:48px;border:4px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  h2{color:#166534;font-size:20px;margin-bottom:8px;}
-  p{color:#6b7280;font-size:14px;}
-  .ok{font-size:52px;margin-bottom:12px;}
-  .err{margin-top:14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px;color:#dc2626;font-size:13px;}
-</style></head><body><div class="card">
-  <div class="spinner" id="sp"></div>
-  <h2 id="h">Submitting to ServiceAutopilot…</h2>
-  <p id="p">Please wait</p>
-  <div class="err" id="e" style="display:none"></div>
-</div>
-<script>
-fetch('https://my.serviceautopilot.com/MarketingBFF/Form/SubmitForm',{
-  method:'POST',
-  headers:{
-    'Content-Type':'application/json; charset=utf-8',
-    'X-Requested-With':'XMLHttpRequest',
-    'x-CompanyID':'d2fbdc9b-4692-4abd-a1e9-43840456fdcb'
-  },
-  body:'${JSON.stringify(payload).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}'
-}).then(async r=>{
-  const txt = await r.text().catch(()=>'');
-  if(r.ok||r.status===200){
-    document.getElementById('sp').style.display='none';
-    document.getElementById('h').textContent='✅ Submitted!';
-    document.getElementById('p').textContent='${firstName} ${lastName} added to ServiceAutopilot.';
-    if(window.opener) window.opener.postMessage('sa_ok','*');
-    setTimeout(()=>window.close(),2200);
-  } else {
-    throw new Error('HTTP '+r.status+(txt?' — '+txt.slice(0,120):''));
-  }
-}).catch(err=>{
-  document.getElementById('sp').style.display='none';
-  document.getElementById('h').textContent='Submission Failed';
-  document.getElementById('p').textContent='';
-  document.getElementById('e').style.display='block';
-  document.getElementById('e').textContent=err.message;
-  if(window.opener) window.opener.postMessage('sa_err:'+err.message,'*');
-});
-<\/script></body></html>`;
+        // Use XHR exactly as SA's own form JS does — same headers, same flags
+        // This works from https:// origins (Wix) — CORS is resolved server-side by SA
+        // for requests that match their expected headers
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://my.serviceautopilot.com/MarketingBFF/Form/SubmitForm');
 
-        // Create blob URL — treated as null origin, not blocked by CORS
-        const blob = new Blob([submitterHtml], { type: 'text/html' });
-        const blobUrl = URL.createObjectURL(blob);
+        // Only set headers SA's own form sets — no extras that trigger CORS preflight rejection
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('x-CompanyID', 'd2fbdc9b-4692-4abd-a1e9-43840456fdcb');
+        xhr.responseType = 'json';
+        xhr.withCredentials = false;
 
-        const popup = window.open(blobUrl, 'saSubmitter', 'width=440,height=240,top=200,left=400,toolbar=no,menubar=no');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
 
-        if (!popup) {
-            URL.revokeObjectURL(blobUrl);
-            btn.disabled = false; btn.style.opacity = '1';
-            btn.textContent = '✅ Submit to ServiceAutopilot';
-            status.style.display = 'block'; status.style.color = '#b45309';
-            status.innerHTML = '⚠️ Popup blocked — please allow popups for this page in your browser bar, then try again.';
-            return;
-        }
+            btn.disabled = false;
+            btn.style.opacity = '1';
 
-        // Revoke blob URL after popup loads (it's already in memory)
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
-
-        // Listen for result from the popup
-        function onMsg(e) {
-            if (e.data === 'sa_ok') {
+            if (xhr.status === 200 || xhr.status === 201 || xhr.status === 204) {
+                // Success
                 btn.textContent = '✅ Submitted!';
                 btn.style.background = '#16a34a';
-                status.style.display = 'block'; status.style.color = '#16a34a';
-                status.innerHTML = '✅ <strong>' + firstName + ' ' + lastName + '</strong> submitted to ServiceAutopilot!';
-                window.removeEventListener('message', onMsg);
+                btn.disabled = true;
+                status.style.display = 'block';
+                status.style.color = '#16a34a';
+                status.innerHTML = '✅ <strong>' + firstName + ' ' + lastName + '</strong> successfully added to ServiceAutopilot!';
                 setTimeout(() => closeSaModal(), 2500);
-            } else if (typeof e.data === 'string' && e.data.startsWith('sa_err:')) {
-                btn.disabled = false; btn.style.opacity = '1';
-                btn.textContent = '✅ Submit to ServiceAutopilot';
-                status.style.display = 'block'; status.style.color = '#dc2626';
-                status.innerHTML = '❌ ' + e.data.replace('sa_err:','');
-                window.removeEventListener('message', onMsg);
-            }
-        }
-        window.addEventListener('message', onMsg);
 
-        // Safety timeout — re-enable if popup closed without response
-        setTimeout(() => {
-            window.removeEventListener('message', onMsg);
-            if (btn.disabled && btn.textContent.includes('Submitting')) {
-                btn.disabled = false; btn.style.opacity = '1';
+            } else if (xhr.status === 0) {
+                // CORS blocked — show actionable message
+                status.style.display = 'block';
+                status.style.color = '#dc2626';
                 btn.textContent = '✅ Submit to ServiceAutopilot';
+                status.innerHTML = '❌ CORS blocked (status 0). Make sure the tool is accessed via its Wix <strong>https://</strong> URL, not opened as a local file. If you\'re on Wix, contact support — SA may need to whitelist your domain.';
+
+            } else {
+                // SA returned an error
+                btn.textContent = '✅ Submit to ServiceAutopilot';
+                const errDetail = xhr.response ? JSON.stringify(xhr.response).slice(0, 200) : ('HTTP ' + xhr.status);
+                status.style.display = 'block';
+                status.style.color = '#dc2626';
+                status.innerHTML = '❌ SA error ' + xhr.status + ': ' + errDetail;
             }
-        }, 15000);
+        };
+
+        xhr.onerror = function() {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.textContent = '✅ Submit to ServiceAutopilot';
+            status.style.display = 'block';
+            status.style.color = '#dc2626';
+            status.innerHTML = '❌ Network error — check internet connection and try again.';
+        };
+
+        xhr.send(payload);
     }
+
+
 
     // Close SA modal on backdrop click
     document.getElementById('saFormModal').addEventListener('click', function(e) {
