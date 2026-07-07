@@ -227,6 +227,20 @@
         .crew-time-bar .bar-title-text { color: white; font-weight: 700; font-size: 15px; }
         .crew-time-bar .bar-subtitle { color: #a5b4fc; font-size: 12px; margin-top: 2px; }
 
+        /* Mower fleet selector */
+        .mower-fleet-row { grid-column: 1 / -1; background: rgba(255,255,255,0.07); border-radius: 10px; padding: 12px 14px; margin-top: 2px; }
+        .mower-fleet-title { color: #e0e7ff; font-weight: 700; font-size: 13px; margin-bottom: 8px; display:flex; align-items:center; gap:8px; }
+        .mower-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .mower-chip { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(165,180,252,0.4); border-radius: 10px; padding: 7px 12px; cursor: pointer; user-select: none; transition: all .15s; }
+        .mower-chip:hover { background: rgba(255,255,255,0.14); }
+        .mower-chip.checked { background: #4338ca; border-color: #818cf8; }
+        .mower-chip.disabled { opacity: 0.4; cursor: not-allowed; }
+        .mower-chip input { width: 15px; height: 15px; accent-color: #a5b4fc; margin: 0; }
+        .mower-chip-label { color: #e0e7ff; font-size: 12.5px; font-weight: 600; }
+        .mower-fleet-summary { margin-top: 10px; font-size: 12px; color: #c7d2fe; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 12px; line-height: 1.6; }
+        .mower-fleet-summary b { color: #fff; }
+        .mower-fleet-warning { margin-top: 6px; font-size: 12px; color: #fde68a; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); border-radius: 8px; padding: 6px 10px; }
+
         /* Manual time override section */
         .manual-time-section { display: none; }
         .manual-time-section.visible { display: block; }
@@ -671,6 +685,12 @@
                             </div>
                         </div>
                     </div>
+                    <div class="mower-fleet-row">
+                        <div class="mower-fleet-title">🚜 Mowers Running This Job</div>
+                        <div class="mower-chip-list" id="mowerChipList"></div>
+                        <div class="mower-fleet-summary" id="mowerFleetSummary"></div>
+                        <div class="mower-fleet-warning" id="mowerFleetWarning" style="display:none;"></div>
+                    </div>
                 </div>
 
                 <!-- Include Mowing Toggle -->
@@ -1059,6 +1079,90 @@
         tall:   [{v:'5.00',l:'$5.00/ft — Tall, Basic Ladder'},{v:'6.25',l:'$6.25/ft — Tall, Standard Ladder'},{v:'7.50',l:'$7.50/ft — Tall, Reach Pole / Spotter Required'}]
     };
 
+    // ===== MOWER FLEET =====
+    // widthIn = deck width in inches. "available:false" mowers are greyed out / not selectable.
+    // When the 3rd Grandstand arrives, just flip gs3's available to true.
+    const MOWER_FLEET = [
+        { id:'gs1',    label:'Grandstand 36" (Unit 1)', type:'standon', widthIn:36, available:true  },
+        { id:'gs2',    label:'Grandstand 36" (Unit 2)', type:'standon', widthIn:36, available:true  },
+        { id:'gs3',    label:'Grandstand 36" (Unit 3 — coming soon)', type:'standon', widthIn:36, available:false },
+        { id:'push30', label:'Push Mower 30"',          type:'push',    widthIn:30, available:true  },
+        { id:'push22', label:'Push Mower 22"',          type:'push',    widthIn:22, available:true  }
+    ];
+
+    let selectedMowerIds = new Set(['gs1','gs2']); // default: 2 standons mowing
+
+    // Combined cutting rate (sqft/hr) for a given mower, scaled off the calibrated
+    // single-unit rates (STANDON_SQFT_PER_HOUR = 1x 36" standon, PUSH_SQFT_PER_HOUR = 1x 22" push)
+    function getMowerRate(m) {
+        if (m.type === 'standon') return STANDON_SQFT_PER_HOUR * (m.widthIn / 36);
+        return PUSH_SQFT_PER_HOUR * (m.widthIn / 22);
+    }
+
+    function getCombinedMowerRate() {
+        let total = 0;
+        MOWER_FLEET.forEach(m => { if (selectedMowerIds.has(m.id)) total += getMowerRate(m); });
+        return total;
+    }
+
+    // Speedup factor vs. the single-unit baseline used to calculate bMins for the selected service type
+    function getMowSpeedupFactor(svcType) {
+        const baseline = svcType === 'push' ? PUSH_SQFT_PER_HOUR : STANDON_SQFT_PER_HOUR;
+        const combined = getCombinedMowerRate();
+        if (combined <= 0) return 1; // nothing selected — fall back to solo estimate
+        return combined / baseline;
+    }
+
+    function toggleMower(id) {
+        if (selectedMowerIds.has(id)) selectedMowerIds.delete(id);
+        else selectedMowerIds.add(id);
+        renderMowerFleet();
+        recalcCrewTime();
+    }
+
+    function renderMowerFleet() {
+        const wrap = document.getElementById('mowerChipList');
+        if (!wrap) return;
+        wrap.innerHTML = MOWER_FLEET.map(m => {
+            const checked = selectedMowerIds.has(m.id);
+            const disabled = !m.available;
+            return `<label class="mower-chip ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}">
+                <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="toggleMower('${m.id}')">
+                <span class="mower-chip-label">${m.label}</span>
+            </label>`;
+        }).join('');
+
+        const crew = getCrewSize();
+        const mowersRunning = selectedMowerIds.size;
+        const techsSupport = Math.max(0, crew - mowersRunning);
+        const combined = getCombinedMowerRate();
+        const speedup = STANDON_SQFT_PER_HOUR > 0 ? (combined / STANDON_SQFT_PER_HOUR) : 0;
+
+        const summary = document.getElementById('mowerFleetSummary');
+        if (summary) {
+            summary.innerHTML = `🚜 <b>${mowersRunning}</b> mower${mowersRunning !== 1 ? 's' : ''} running &nbsp;·&nbsp;
+                ✂️ <b>${techsSupport}</b> tech${techsSupport !== 1 ? 's' : ''} trimming/support &nbsp;·&nbsp;
+                ⚡ <b>${speedup.toFixed(2)}x</b> a single 36" standon's cutting speed`;
+        }
+        const warn = document.getElementById('mowerFleetWarning');
+        if (warn) {
+            if (mowersRunning > crew) {
+                warn.style.display = 'block';
+                warn.textContent = `⚠️ ${mowersRunning} mowers selected but only ${crew} techs on site — reduce mowers or increase crew size.`;
+            } else if (mowersRunning === 0) {
+                warn.style.display = 'block';
+                warn.textContent = `⚠️ No mowers selected — on-site mow time will default to the solo estimate.`;
+            } else {
+                warn.style.display = 'none';
+            }
+        }
+    }
+
+    function getMowersRunningLabel() {
+        const names = MOWER_FLEET.filter(m => selectedMowerIds.has(m.id)).map(m => m.label.replace(' (coming soon)', ''));
+        return names.length ? names.join(', ') : 'None selected';
+    }
+
     // ===== SA FORM — v1 native POST (bypasses CORS/sandbox entirely) =====
 
     // SA frequency UUIDs from form option elements
@@ -1252,6 +1356,7 @@
     }
 
     function recalcCrewTime() {
+        renderMowerFleet();
         const svc  = document.getElementById('serviceType').value;
         const diff = document.getElementById('difficultyLevel').value;
         const crew = getCrewSize();
@@ -1264,10 +1369,10 @@
         let mowBudg = 0, mowOnsite = 0;
         if (isManualTimeMode && manualTimeMins > 0 && diff) {
             const result = calculateMowingFromTime(manualTimeMins, svc || 'standard', diff);
-            mowBudg = result.bMins; mowOnsite = calcOnsiteTime(mowBudg, crew);
+            mowBudg = result.bMins; mowOnsite = Math.ceil(mowBudg / getMowSpeedupFactor(svc || 'standard'));
         } else if (svc && diff && totalArea > 0) {
             const result = calculateMowing(totalArea, svc, diff);
-            mowBudg = result.bMins; mowOnsite = calcOnsiteTime(mowBudg, crew);
+            mowBudg = result.bMins; mowOnsite = Math.ceil(mowBudg / getMowSpeedupFactor(svc));
         }
 
         let bedBudg = 0, bedOnsite = 0;
@@ -1529,16 +1634,18 @@
                     areaLabel = totalArea.toLocaleString() + ' sq ft';
                 }
             }
-            const onsiteMins = calcOnsiteTime(mow.bMins, crew);
+            const onsiteMins = Math.ceil(mow.bMins / getMowSpeedupFactor(svc));
             const svcNames  = {standard:'Stand-On Mowing', push:'Push Mowing - Bagged'};
             const diffNames = {standard:'Standard (Flat)', sloped:'Sloped/Hilly', extreme:'Extreme/Obstacles'};
             const freqNames = {onetime:'One-time', weekly:'Weekly', biweekly:'Bi-weekly', monthly:'Monthly'};
+            const mowersRunning = selectedMowerIds.size;
+            const techsSupport  = Math.max(0, crew - mowersRunning);
             document.getElementById('resMowArea').textContent      = areaLabel;
             document.getElementById('resMowService').textContent   = svcNames[svc];
             document.getElementById('resMowDifficulty').textContent= diffNames[diff];
             document.getElementById('resMowFrequency').textContent = freqNames[freq];
             document.getElementById('resMowBHrs').textContent      = formatMins(mow.bMins);
-            document.getElementById('resMowCrew').textContent      = crewLabel;
+            document.getElementById('resMowCrew').textContent      = `${crewLabel} — ${getMowersRunningLabel()}${techsSupport > 0 ? ` (+${techsSupport} trimming/support)` : ''}`;
             document.getElementById('resMowOnsite').textContent    = formatMins(onsiteMins);
             document.getElementById('resMowPricingMode').textContent = pricingModeLabel;
             document.getElementById('resMowPrice').textContent     = '$' + mow.price.toFixed(2);
@@ -1547,7 +1654,7 @@
             document.getElementById('resBudgetedTime').textContent   = formatMins(mow.bMins);
             document.getElementById('resMowOnsiteTime').textContent  = formatMins(onsiteMins);
             document.getElementById('tbbMowRow').style.display       = 'flex';
-            document.getElementById('tbbMowOnsiteRow').style.display = crew > 1 ? 'flex' : 'none';
+            document.getElementById('tbbMowOnsiteRow').style.display = onsiteMins !== mow.bMins ? 'flex' : 'none';
             document.getElementById('timeBreakdownBox').style.display= 'block';
             document.getElementById('manualTimeNotice').style.display= isManualTimeMode ? 'block' : 'none';
         } else {
@@ -1618,14 +1725,16 @@
         const mowBMinsForTotal = inclMow ? (isManualTimeMode
             ? Math.ceil(manualTimeMins * DIFFICULTY_MULTIPLIERS[document.getElementById('difficultyLevel').value].multiplier * (document.getElementById('serviceType').value === 'push' ? 2.5 : 1.0))
             : calculateMowing(totalArea, document.getElementById('serviceType').value, document.getElementById('difficultyLevel').value).bMins) : 0;
-        const mowOnsite   = inclMow ? calcOnsiteTime(mowBMinsForTotal, crew) : 0;
+        const mowOnsite   = inclMow ? Math.ceil(mowBMinsForTotal / getMowSpeedupFactor(document.getElementById('serviceType').value)) : 0;
         const splitHedgeF = document.getElementById('splitHedgeTime').checked;
         const splitBedF   = document.getElementById('splitBedTime').checked;
         const hedgeOnsite = inclHedge ? (splitHedgeF ? calcOnsiteTime(hedgeBudgMins, crew) : hedgeBudgMins) : 0;
         const bedOnsite   = inclBed   ? (splitBedF   ? calcOnsiteTime(bedBudgMins, crew)   : bedBudgMins)   : 0;
         const totalOnsiteMins = Math.max(mowOnsite, hedgeOnsite) + bedOnsite;
 
-        document.getElementById('resCrewSize').textContent  = crewLabel;
+        const mowersRunningTotal = selectedMowerIds.size;
+        const techsSupportTotal  = Math.max(0, crew - mowersRunningTotal);
+        document.getElementById('resCrewSize').textContent  = `${crewLabel}${inclMow ? ` (🚜 ${mowersRunningTotal} mowing${techsSupportTotal > 0 ? `, ✂️ ${techsSupportTotal} support` : ''})` : ''}`;
         document.getElementById('resOnsiteTime').textContent= formatMins(totalOnsiteMins);
         document.getElementById('timeBreakdownBox').style.display = 'block';
         document.getElementById('resGrandTotal').textContent = '$' + grandTotal.toFixed(2);
@@ -2079,6 +2188,7 @@
     window.addEventListener('load', () => {
         setTimeout(() => { if (!autocomplete && typeof google !== 'undefined' && google.maps && google.maps.places) setupAutocomplete(); }, 1000);
         toggleMowingSection();
+        renderMowerFleet();
     });
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBHvZq7kiDX_thzi8F9XTg_bySLcxpd_ME&libraries=places,drawing,geometry&callback=initMap" async defer></script>
